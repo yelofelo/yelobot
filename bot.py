@@ -3110,13 +3110,16 @@ async def main():
     await bot.add_cog(twitter_cog)
     StartupTask(twitter_cog.sub_to_tweets_startup)
 
+    daily_message_cog = DailyMessages(bot, MONGO_DB)
+    await bot.add_cog(daily_message_cog)
+    StartupTask(daily_message_cog.init_daily_messages)
+
     filter_cog = MessageFilter(bot, MONGO_DB)
     await bot.add_cog(filter_cog)
 
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))
-    await bot.add_cog(DailyMessages(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
         check_minecraft_events.start()
