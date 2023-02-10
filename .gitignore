@@ -1,0 +1,5 @@
+__pycache__/
+model-preparation/
+venv/
+.env
+edit_db.py

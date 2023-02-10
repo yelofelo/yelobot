@@ -1,0 +1,16 @@
+discord.py
+requests
+wikipedia
+python-dotenv
+mcstatus
+beautifulsoup4
+pymongo
+dnspython
+emoji
+mcrcon
+pytz
+timezonefinder
+tweepy
+google-api-python-client
+openai
+setuptools>=65.5
