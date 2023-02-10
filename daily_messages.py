@@ -31,7 +31,7 @@ class DailyMessages(commands.Cog):
     @commands.command('dailymessage')
     @commands.has_guild_permissions(kick_members=True)
     async def add_daily_message(self, ctx: commands.Context, *, command: str):
-        """Daily Messages
+        """Server Configuration
         Schedules a message that will be sent in this channel every day at a specific time.
         This is based on the time zone that you have set. Defaults to UTC if you have not set one.
         +dailymessage <HH>:<MM> [AM|PM] <message>
@@ -88,7 +88,7 @@ class DailyMessages(commands.Cog):
     @commands.command(name='dailymessages', aliases=['listdailymessages'])
     @commands.has_guild_permissions(kick_members=True)
     async def list_daily_messages(self, ctx: commands.Context):
-        """Daily Messages
+        """Server Configuration
         Get a list of all daily messages in this server. Allows you to delete them too.
         +dailymessages
         """
