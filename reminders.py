@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import asyncio
 
 import yelobot_utils
-from yelobot_utils import Pagination, PaginationButton, reply
+from yelobot_utils import Pagination, PaginationButton, reply, YeloBot
 import timezones
 
 months = dict([
@@ -153,7 +153,7 @@ class ReminderModal1(discord.ui.Modal, title='Create Reminder (Page 1)'):
 class Reminders(commands.Cog):
     REMIND_RE = re.compile(r'^((?P<weeks>\d*)w)?((?P<days>\d*)d)?((?P<hours>\d*)h)?((?P<minutes>\d*)m)?((?P<seconds>\d*)s)?$')
 
-    def __init__(self, bot, mongo):
+    def __init__(self, bot: YeloBot, mongo):
         self.bot = bot
         self.MONGO_DB = mongo
 
@@ -384,7 +384,7 @@ class Reminders(commands.Cog):
 
 
     async def init_reminders(self):
-        await asyncio.sleep(5) # Wait for the bot to initialize
+        await self.bot.wait_until_ready()
         collection = self.MONGO_DB['Reminders']
 
         to_add = []

@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 import pytz
 from timezonefinder import TimezoneFinder
 import time
@@ -35,3 +36,6 @@ def datetime_now_in_tz(timezone):
 def is_leap_year_in_tz(timezone):
     return calendar.isleap(current_year_in_tz(timezone))
 
+def get_utc_offset(timezone) -> timedelta:
+    offset = pytz.timezone(timezone).utcoffset(datetime.now(), is_dst=True)
+    return offset.total_seconds() // 3600, (offset.total_seconds() % 3600) // 60

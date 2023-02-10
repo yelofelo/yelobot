@@ -55,6 +55,7 @@ from openai_interface import OpenAIInterface
 from message_filter import MessageFilter
 from archive_pins import ArchivePins
 from bible_verse import BibleVerse
+from daily_messages import DailyMessages
 import checks
 from help_command import HelpCommand
 
@@ -3115,6 +3116,7 @@ async def main():
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))
+    await bot.add_cog(DailyMessages(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
         check_minecraft_events.start()
