@@ -20,10 +20,9 @@ class DailyMessages(commands.Cog):
     async def message_thread(self, channel_id: int, hour: int, minute: int, message: str):
         now = datetime.now()
         today = datetime(now.year, now.month, now.day, 0, 0, 0, 0)
+        target = today + timedelta(hours=hour, minutes=minute)
 
-        if (target - now).total_seconds() > 0.1:
-            target = today + timedelta(hours=hour, minutes=minute)
-        else:
+        if target < now:
             target = today + timedelta(days=1) - timedelta(hours=hour, minutes=minute)
 
         channel = await self.bot.fetch_channel(channel_id)
