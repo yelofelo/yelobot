@@ -20,14 +20,15 @@ class DailyMessages(commands.Cog):
     async def message_thread(self, channel_id: int, hour: int, minute: int, message: str):
         now = datetime.now()
         today = datetime(now.year, now.month, now.day, 0, 0, 0, 0)
-        target = today + timedelta(hours=hour, minutes=minute)
-
-        print(f'Starting wait for message {message} at {hour}:{minute}')
 
         if (target - now).total_seconds() > 0.1:
-            channel = await self.bot.fetch_channel(channel_id)
-            await asyncio.sleep((target - now).total_seconds())
-            await channel.send(message)
+            target = today + timedelta(hours=hour, minutes=minute)
+        else:
+            target = today + timedelta(days=1) - timedelta(hours=hour, minutes=minute)
+
+        channel = await self.bot.fetch_channel(channel_id)
+        await asyncio.sleep((target - now).total_seconds())
+        await channel.send(message)
 
 
     @commands.command('dailymessage')
@@ -167,7 +168,7 @@ class DailyMessages(commands.Cog):
 
     async def init_daily_messages(self):
         await self.bot.wait_until_ready()
-        print('initializing daily messages')
+
         collection = self.MONGO_DB['DailyMessages']
 
         to_add = []
