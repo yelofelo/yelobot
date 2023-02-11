@@ -23,7 +23,7 @@ class DailyMessages(commands.Cog):
         target = today + timedelta(hours=hour, minutes=minute)
 
         if target < now:
-            target = today + timedelta(days=1) - timedelta(hours=hour, minutes=minute)
+            target += timedelta(days=1)
 
         channel = await self.bot.fetch_channel(channel_id)
         await asyncio.sleep((target - now).total_seconds())
