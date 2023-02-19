@@ -2033,7 +2033,7 @@ async def map(ctx):
 
 
 @bot.command(name='taglist', aliases=['tags', 'images', 'imagelist'])
-async def taglist(ctx):
+async def taglist(ctx: commands.Context):
     """Tagged Images
     List all of the tags in this server.
     +taglist
@@ -2051,7 +2051,11 @@ async def taglist(ctx):
         if isinstance(image, str): # legacy -- means raw url
             return tag
         else:
-            return f'{tag} (added by {bot.get_user(images[tag]["author"]).mention})'
+            added_by = bot.get_user(images[tag]["author"])
+            if added_by and ctx.guild in added_by.mutual_guilds:
+                return f'{tag} (added by {added_by.mention})'
+            else:
+                return f'{tag} (added by a user no longer in this server)'
 
     await Pagination.send_paginated_embed(ctx, sorted(images.keys(), key=lambda x: x.lower()),
     'Image Tags', color=discord.Color.yellow(), read_data_fn=read_data)
