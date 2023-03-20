@@ -2723,13 +2723,13 @@ async def wordcoin(ctx, *, user=None):
             await reply(ctx, f'User not found ({usage})')
             return
 
-    collection = MONGO_DB['Wordcoin']
+    target_username = target_user.nick if target_user.nick else target_user.name
 
     if target_user.id == TONY_USER_ID:
-        await reply(ctx, 'Wordcoin balance: infinity')
+        await reply(ctx, f'{target_username}\'s wordcoin balance: infinity')
         return
 
-    target_username = target_user.nick if target_user.nick else target_user.name
+    collection = MONGO_DB['Wordcoin']
     doc = collection.find_one({'user': target_user.id})
     if not doc:
         await reply(ctx, f'{target_username}\'s wordcoin balance: 0')
