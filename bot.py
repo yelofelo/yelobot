@@ -2708,18 +2708,28 @@ TONY_USER_ID = 155454518551642113
 
 
 @bot.command(name='wordcoin', aliases=['wordcoins'])
-async def wordcoin(ctx):
+async def wordcoin(ctx, *, user=None):
     """Fun
     Check your Wordcoin balance.
-    +wordcoin
+    +wordcoin <User>
     """
+    usage = '+wordcoin <user>'
+
+    if not user:
+        target_user = ctx.author
+    else:
+        target_user = search_for_user(ctx, user)
+        if not target_user:
+            await reply(ctx, f'User not found ({usage})')
+            return
+
     collection = MONGO_DB['Wordcoin']
 
-    if ctx.author.id == TONY_USER_ID:
+    if target_user.id == TONY_USER_ID:
         await reply(ctx, 'Wordcoin balance: infinity')
         return
 
-    doc = collection.find_one({'user': ctx.author.id})
+    doc = collection.find_one({'user': target_user.id})
     if not doc:
         await reply(ctx, 'Wordcoin balance: 0')
         return
