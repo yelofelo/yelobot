@@ -2729,12 +2729,13 @@ async def wordcoin(ctx, *, user=None):
         await reply(ctx, 'Wordcoin balance: infinity')
         return
 
+    target_username = target_user.nick if target_user.nick else target_user.name
     doc = collection.find_one({'user': target_user.id})
     if not doc:
-        await reply(ctx, 'Wordcoin balance: 0')
+        await reply(ctx, f'{target_username}\'s wordcoin balance: 0')
         return
     
-    await reply(ctx, f'Wordcoin balance: {doc["balance"]}')
+    await reply(ctx, f'{target_username}\'s wordcoin balance: {doc["balance"]}')
 
 
 @bot.command(name='givewordcoin')
