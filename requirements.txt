@@ -4,7 +4,6 @@ wikipedia
 python-dotenv
 mcstatus
 beautifulsoup4
-pymongo
 dnspython
 emoji
 mcrcon
@@ -14,3 +13,4 @@ tweepy
 google-api-python-client
 openai
 setuptools>=65.5
+motor==3.1

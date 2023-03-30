@@ -130,7 +130,7 @@ class Pagination:
         Pagination.next_label = discord.utils.get(guild.emojis, name=next_name)
 
     @staticmethod
-    async def send_paginated_embed(ctx, fields, title=None, color=None, fields_on_page=15, read_data_fn=lambda x: x, additional_buttons=None):
+    async def send_paginated_embed(ctx, fields, title=None, color=None, fields_on_page=15, read_data_fn=lambda x: x, read_data_async_fn=None, additional_buttons=None):
         if additional_buttons is None:
             additional_buttons = []
 
@@ -140,12 +140,20 @@ class Pagination:
             reply(ctx, 'No results.')
             return
         
-        if fields_on_page == 1:
-            description = read_data_fn(fields[0])
-        elif len(fields) <= fields_on_page:
-            description = '\n'.join([read_data_fn(field) for field in fields])
+        if read_data_async_fn is not None:
+            if fields_on_page == 1:
+                description = await read_data_async_fn(fields[0])
+            elif len(fields) <= fields_on_page:
+                description = '\n'.join([await read_data_async_fn(field) for field in fields])
+            else:
+                description = '\n'.join([await read_data_async_fn(field) for field in fields[:fields_on_page]])
         else:
-            description = '\n'.join([read_data_fn(field) for field in fields[:fields_on_page]])
+            if fields_on_page == 1:
+                description = read_data_fn(fields[0])
+            elif len(fields) <= fields_on_page:
+                description = '\n'.join([read_data_fn(field) for field in fields])
+            else:
+                description = '\n'.join([read_data_fn(field) for field in fields[:fields_on_page]])
 
         max_page = ((len(fields) - 1) // fields_on_page) + 1
 
@@ -158,7 +166,7 @@ class Pagination:
         message_data = {
             'author': ctx.author.id, 'fields': fields, 'on_page': 1, 'fields_on_page': fields_on_page, 'max_page': max_page,
             'next_button': next_button, 'prev_button': prev_button, 'title': title, 'color': color, 'field_idx': 0, 'time': time.time(),
-            'read_data_fn': read_data_fn, 'additional_buttons': additional_buttons
+            'read_data_fn': read_data_fn, 'read_data_async_fn': read_data_async_fn, 'additional_buttons': additional_buttons
             }
 
         buttons = [prev_button, next_button]
@@ -202,12 +210,20 @@ class Pagination:
             else:
                 raise ValueError(f'Invalid callback type {cb_type}')
 
-            if data['fields_on_page'] == 1:
-                desc = data['read_data_fn'](data['fields'][data['field_idx']])
-            elif data['field_idx'] + data['fields_on_page'] >= len(data['fields']):
-                desc = '\n'.join([data['read_data_fn'](field) for field in data['fields'][data['field_idx']:]])
+            if data['read_data_async_fn'] is not None:
+                if data['fields_on_page'] == 1:
+                    desc = await (data['read_data_async_fn'])(data['fields'][data['field_idx']])
+                elif data['field_idx'] + data['fields_on_page'] >= len(data['fields']):
+                    desc = '\n'.join([await (data['read_data_async_fn'])(field) for field in data['fields'][data['field_idx']:]])
+                else:
+                    desc = '\n'.join([await (data['read_data_async_fn'])(field) for field in data['fields'][data['field_idx']:(data['field_idx'] + data['fields_on_page'])]])
             else:
-                desc = '\n'.join([data['read_data_fn'](field) for field in data['fields'][data['field_idx']:(data['field_idx'] + data['fields_on_page'])]])
+                if data['fields_on_page'] == 1:
+                    desc = data['read_data_fn'](data['fields'][data['field_idx']])
+                elif data['field_idx'] + data['fields_on_page'] >= len(data['fields']):
+                    desc = '\n'.join([data['read_data_fn'](field) for field in data['fields'][data['field_idx']:]])
+                else:
+                    desc = '\n'.join([data['read_data_fn'](field) for field in data['fields'][data['field_idx']:(data['field_idx'] + data['fields_on_page'])]])
             
             embed = discord.Embed(description=desc, title=data['title'], color=data['color'])
             embed.set_footer(text=f'Page {data["on_page"]}/{data["max_page"]}')

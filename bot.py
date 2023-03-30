@@ -20,7 +20,7 @@ from mcstatus import JavaServer
 from mcrcon import MCRcon
 import socket
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 import emoji
 import io
 import certifi
@@ -112,7 +112,6 @@ bot.remove_command('help')
 StartupTask.set_bot(bot)
 
 lastmessages = LastMessages()
-MONGO_DB = MongoClient(f'mongodb+srv://yelofelo:{MONGO_PASS}@yelobot.exzzq.mongodb.net/YeloBot?retryWrites=true&w=majority', tlsCAFile=certifi.where()).YeloBot
 
 PLAYING_STATUS = 'Mario Remastered'
 
@@ -226,7 +225,7 @@ async def on_message(message: discord.Message):
 async def on_raw_message_delete(payload):
     counting_collection = MONGO_DB['Counting']
 
-    doc = counting_collection.find_one({'server': payload.guild_id})
+    doc = await counting_collection.find_one({'server': payload.guild_id})
 
     if not doc:
         return
@@ -244,7 +243,7 @@ async def on_raw_message_delete(payload):
 async def on_raw_message_edit(payload):
     counting_collection = MONGO_DB['Counting']
     
-    doc = counting_collection.find_one({'server': payload.guild_id})
+    doc = await counting_collection.find_one({'server': payload.guild_id})
 
     if not doc:
         return
@@ -275,10 +274,10 @@ async def on_member_join(member: discord.Member):
     server_id = str(member.guild.id)
 
     sal_collection = MONGO_DB['Salutations']
-    sal_doc = sal_collection.find_one({'server': int(server_id)})
+    sal_doc = await sal_collection.find_one({'server': int(server_id)})
 
     jr_collection = MONGO_DB['JoinRole']
-    jr_doc = jr_collection.find_one({'server_id': int(server_id)})
+    jr_doc = await jr_collection.find_one({'server_id': int(server_id)})
 
     if sal_doc and sal_doc['join'] and sal_doc['channel']:
         await bot.get_channel(sal_doc['channel']).send(sal_doc['join'].replace('%USER%', f'{member.mention}').replace('%SERVER%', member.guild.name))
@@ -297,7 +296,7 @@ async def on_member_remove(member):
     server = str(member.guild.id)
 
     collection = MONGO_DB['Salutations']
-    doc = collection.find_one({'server': int(server)})
+    doc = await collection.find_one({'server': int(server)})
 
     if doc and doc['leave'] and doc['channel']:
         await bot.get_channel(doc['channel']).send(doc['leave'].replace('%USER%', f'{member.name}#{member.discriminator}').replace('%SERVER%', member.guild.name))
@@ -334,16 +333,16 @@ async def add_join_message(ctx, *, message):
     +joinmessage <Message>
     """
     collection = MONGO_DB['Salutations']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
 
     if doc:
-        collection.update_one({'server': ctx.guild.id}, {'$set': {'join': message}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {'join': message}})
         msg = 'Join message updated.'
     else:
-        collection.insert_one({'server': ctx.guild.id, 'join': message, 'leave': '', 'channel': 0})
+        await collection.insert_one({'server': ctx.guild.id, 'join': message, 'leave': '', 'channel': 0})
         msg = 'Join message updated. Please remember to set the channel using +salutationchannel <#channel>.'
 
-    await ctx.send(msg)
+    await reply(ctx, msg)
 
 @bot.command(name='leavemessage')
 @has_guild_permissions(manage_messages=True)
@@ -357,13 +356,13 @@ async def add_leave_message(ctx, *, message):
     doc = collection.find_one({'server': ctx.guild.id})
 
     if doc:
-        collection.update_one({'server': ctx.guild.id}, {'$set': {'leave': message}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {'leave': message}})
         msg = 'Leave message updated.'
     else:
-        collection.insert_one({'server': ctx.guild.id, 'leave': message, 'join': '', 'channel': 0})
+        await collection.insert_one({'server': ctx.guild.id, 'leave': message, 'join': '', 'channel': 0})
         msg = 'Leave message updated. Please remember to set the channel using +salutationchannel <#channel>.'
 
-    await ctx.send(msg)
+    await reply(ctx, msg)
 
 @bot.command(name='salutationchannel')
 @has_guild_permissions(manage_messages=True)
@@ -384,20 +383,20 @@ async def set_salutation_channel(ctx, *, channel=None):
         channel_id = ctx.message.channel.id
 
     collection = MONGO_DB['Salutations']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
 
     if doc:
-        collection.update_one({'server': ctx.guild.id}, {'$set': {'channel': channel_id}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {'channel': channel_id}})
     else:
-        collection.insert_one({'server': ctx.guild.id, 'leave': '', 'join': '', 'channel': channel_id})
+        await collection.insert_one({'server': ctx.guild.id, 'leave': '', 'join': '', 'channel': channel_id})
 
-    await ctx.send(f'{bot.get_channel(channel_id)} has been set as the salutation channel.')
+    await reply(ctx, f'{bot.get_channel(channel_id)} has been set as the salutation channel.')
 
 @bot.event
 async def on_raw_reaction_add(reaction: discord.RawReactionActionEvent):
     emote_collection = MONGO_DB['EmoteRoles']
 
-    item = emote_collection.find_one({'message': reaction.message_id})
+    item = await emote_collection.find_one({'message': reaction.message_id})
 
     if item and reaction.emoji.name in item['emotes']:
         await reaction.member.add_roles(
@@ -410,10 +409,10 @@ async def on_raw_reaction_add(reaction: discord.RawReactionActionEvent):
     youtube_collection = MONGO_DB['YoutubeSubs']
 
     if reaction.emoji.name == '✅':
-        if timezone_collection.find_one({'message_id': reaction.message_id, 'user_id': reaction.user_id}):
+        if await timezone_collection.find_one({'message_id': reaction.message_id, 'user_id': reaction.user_id}):
             await confirm_timezone(reaction.user_id, await bot.fetch_channel(reaction.channel_id))
             return
-        elif youtube_collection.find_one({'message': reaction.message_id, 'user_id': reaction.user_id}):
+        elif await youtube_collection.find_one({'message': reaction.message_id, 'user_id': reaction.user_id}):
             yt_cog = bot.get_cog('YouTube')
             await yt_cog.confirm_sub(reaction.message_id, reaction.channel_id)
             return
@@ -423,7 +422,7 @@ async def on_raw_reaction_add(reaction: discord.RawReactionActionEvent):
 async def on_raw_reaction_remove(reaction: discord.RawReactionActionEvent):
     collection = MONGO_DB['EmoteRoles']
 
-    item = collection.find_one({'message': reaction.message_id})
+    item = await collection.find_one({'message': reaction.message_id})
 
     if item:
         member = bot.get_guild(LWOLF_SERVER_ID).get_member(reaction.user_id)
@@ -450,7 +449,7 @@ async def toggle_talking(ctx: commands.Context):
     else:
         await reply(ctx, 'I will start talking again.')
     
-    collection.update_one({}, {'$set': {'talking': not IS_TALKING}})
+    await collection.update_one({}, {'$set': {'talking': not IS_TALKING}})
     IS_TALKING = not IS_TALKING
 
 
@@ -478,23 +477,23 @@ async def set_join_role(ctx: commands.Context, role_id=None):
         return
 
     collection = MONGO_DB['JoinRole']
-    doc = collection.find_one({'server_id': ctx.guild.id})
+    doc = await collection.find_one({'server_id': ctx.guild.id})
 
     if doc is None:
-        collection.insert_one({'server_id': ctx.guild.id, 'role_id': role_id})
+        await collection.insert_one({'server_id': ctx.guild.id, 'role_id': role_id})
     else:
-        collection.update_one({'server_id': ctx.guild.id}, {'$set': {'role_id': role_id}})
+        await collection.update_one({'server_id': ctx.guild.id}, {'$set': {'role_id': role_id}})
 
     await reply(ctx, 'Join role set.')
 
 
 async def clear_join_role(ctx: commands.Context):
     collection = MONGO_DB['JoinRole']
-    if not collection.find_one({'server_id': ctx.guild.id}):
+    if not await collection.find_one({'server_id': ctx.guild.id}):
         await reply(ctx, 'This server has no join role set.')
         return
 
-    collection.delete_one({'server_id': ctx.guild.id})
+    await collection.delete_one({'server_id': ctx.guild.id})
     await reply(ctx, 'Join role cleared.')
 
 
@@ -541,7 +540,7 @@ async def add_emote_role(ctx, channel_id=None, message_id=None, role_id=None, em
     +emoterole <Channel ID> <Message ID> <Role ID> <Emote>
     """
     if channel_id is None or message_id is None or role_id is None or emote is None:
-        await ctx.send('Usage: +emoterole <CHANNEL ID> <MESSAGE ID> <ROLE ID> <EMOTE>')
+        await reply(ctx, 'Usage: +emoterole <CHANNEL ID> <MESSAGE ID> <ROLE ID> <EMOTE>')
         return
 
     try:
@@ -560,17 +559,17 @@ async def add_emote_role(ctx, channel_id=None, message_id=None, role_id=None, em
 
     collection = MONGO_DB['EmoteRoles']
 
-    item = collection.find_one({'message': message_id})
+    item = await collection.find_one({'message': message_id})
 
     if item:
         item['emotes'][emote] = role_id
-        collection.delete_many({'message': message_id})
+        await collection.delete_many({'message': message_id})
     else:
         item = {'message': message_id, 'emotes': {emote: role_id}}
 
-    collection.insert_one(item)
+    await collection.insert_one(item)
 
-    await ctx.send('Done.')
+    await reply(ctx, 'Done.')
 
 ######################### COUNTING ############################
 # This should absolutely be in a separate file, but it isn't.
@@ -597,7 +596,7 @@ async def process_counting(message, number):
 
     collection = MONGO_DB['Counting']
     query = {'channel': message.channel.id}
-    doc = collection.find_one(query)
+    doc = await collection.find_one(query)
     if doc is None:
         return
 
@@ -622,9 +621,9 @@ async def process_counting(message, number):
     old_user_num = users.setdefault(str(message.author.id), 0)
     users[str(message.author.id)] = old_user_num + 1
     if record:
-        collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'record': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
+        await collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'record': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
     else:
-        collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
+        await collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
 
     if doc['grace_period'] == number:
         reaction = GRACE_PERIOD_END_REACTION
@@ -653,7 +652,7 @@ async def process_counting(message, number):
 
 async def reset_counting(message):
     collection = MONGO_DB['Counting']
-    collection.update_one({'server': message.guild.id}, {'$set': {'count': 0, 'users': {}, 'last_user': 0}})
+    await collection.update_one({'server': message.guild.id}, {'$set': {'count': 0, 'users': {}, 'last_user': 0}})
 
 async def counting_stats(message, next_number, users):
     highest_user_id = 0
@@ -691,7 +690,7 @@ async def punish_counting(message):
     if not doc:
         return
 
-    counting_doc = counting_collection.find_one({'server': message.guild.id})
+    counting_doc = await counting_collection.find_one({'server': message.guild.id})
 
     next_number = counting_doc['count'] + 1
 
@@ -709,7 +708,7 @@ async def punish_counting(message):
     time_to_remove = time.time() + COUNTING_PUNISHMENT_TIMES.setdefault(punish_level, COUNTING_PUNISHMENT_TIMES[5])
     users[str(message.author.id)] = {'time_to_remove': time_to_remove, 'current_level': punish_level}
 
-    collection.update_one({'server': message.guild.id}, {'$set': {'users': users}})
+    await collection.update_one({'server': message.guild.id}, {'$set': {'users': users}})
 
     member = yelobot_utils.get(message.guild.members, id=message.author.id)
     await member.add_roles(punish_role)
@@ -740,7 +739,7 @@ async def set_counting_punishment_role(ctx, *, role_id=None):
     current_time = time.time()
 
     collection = MONGO_DB['CountingPunishments']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     if doc:
         old_role = yelobot_utils.get(ctx.guild.roles, id=doc['role'])
         if old_role:
@@ -750,11 +749,11 @@ async def set_counting_punishment_role(ctx, *, role_id=None):
                 if member and users[str(user_id)]['time_to_remove'] > current_time:
                     member.remove_roles(old_role)
                     member.add_roles(role)
-        collection.update_one({'server': ctx.guild.id}, {'$set': {'role': role_id}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {'role': role_id}})
     else:
-        collection.insert_one({'server': ctx.guild.id, 'role': role.id, 'users': {}})
+        await collection.insert_one({'server': ctx.guild.id, 'role': role.id, 'users': {}})
 
-    await ctx.send('Counting punishment role set successfully.')
+    await reply(ctx, 'Counting punishment role set successfully.')
 
 
 @bot.command(name='removecountingpunishments')
@@ -765,13 +764,13 @@ async def remove_counting_punishments(ctx):
     +removecountingpunishments
     """
     collection = MONGO_DB['CountingPunishments']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     if not doc:
         return
 
     role = yelobot_utils.get(ctx.guild.roles, id=doc['role'])
 
-    collection.update_one({'server': ctx.guild.id}, {'$set': {'users': {}}})
+    await collection.update_one({'server': ctx.guild.id}, {'$set': {'users': {}}})
 
     for member in ctx.guild.members:
         try:
@@ -779,7 +778,7 @@ async def remove_counting_punishments(ctx):
         except discord.HTTPException:
             pass
     
-    await ctx.send('Removed all counting punishments.')
+    await reply(ctx, 'Removed all counting punishments.')
 
 
 @bot.command(name='countingstandings')
@@ -789,13 +788,11 @@ async def counting_standings(ctx):
     +countingstandings
     """
     collection = MONGO_DB['CountingPunishments']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     if not doc:
         return
 
     output = ''
-
-    print(ctx.guild.members)
 
     for user_id in doc['users']:
         member = yelobot_utils.get(ctx.guild.members, id=int(user_id))
@@ -807,7 +804,7 @@ async def counting_standings(ctx):
         if doc["users"][user_id]["time_to_remove"] > time.time():
             output = output.rstrip() + f' ({yelobot_utils.time_remaining(doc["users"][user_id]["time_to_remove"])} remaining)\n'
 
-    await ctx.send(output.strip())
+    await reply(ctx, output.strip())
 
 
 @bot.command(name='countingrecord', aliases=['countinghighscore', 'countinghigh', 'countingbest', 'countinghighest'])
@@ -817,12 +814,12 @@ async def counting_record(ctx):
     +countingrecord
     """
     collection = MONGO_DB['Counting']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
 
     if not doc:
         return
 
-    await ctx.send(f'The highest number reached so far is {doc["record"]}.')
+    await reply(ctx, f'The highest number reached so far is {doc["record"]}.')
 
 
 @bot.command(name='countingreaction')
@@ -845,7 +842,7 @@ async def set_counting_reaction(ctx, number=None, *, emote=None):
         return
     
     collection = MONGO_DB['Counting']
-    doc = collection.find({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
 
     if not doc:
         await reply(ctx, 'This server has no counting channel set.')
@@ -855,9 +852,9 @@ async def set_counting_reaction(ctx, number=None, *, emote=None):
         collection.update_one({'server': ctx.guild.id}, {'$set': {'custom_reactions': dict()}})
 
     if emote is None:
-        collection.update_one({'server': ctx.guild.id}, {'$unset': {f'custom_reactions.{number}': ''}})
+        await collection.update_one({'server': ctx.guild.id}, {'$unset': {f'custom_reactions.{number}': ''}})
     elif emoji.is_emoji(emote):
-        collection.update_one({'server': ctx.guild.id}, {'$set': {f'custom_reactions.{number}': emote}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {f'custom_reactions.{number}': emote}})
     else:
         mo = re.match(r'^<a?:.+:(\d+)>$', emote)
         if not mo:
@@ -871,7 +868,7 @@ async def set_counting_reaction(ctx, number=None, *, emote=None):
             await reply(ctx, usage)
             return
         
-        collection.update_one({'server': ctx.guild.id}, {'$set': {f'custom_reactions.{number}': emote_id}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {f'custom_reactions.{number}': emote_id}})
 
     await reply(ctx, 'Custom reaction updated.')
 
@@ -890,18 +887,18 @@ async def set_counting_channel(ctx, *, channel):
         channel = None
 
     if channel is None or channel.guild != ctx.guild:
-        await ctx.send('Invalid channel. Please use #channel_name, or the channel ID.')
+        await reply(ctx, 'Invalid channel. Please use #channel_name, or the channel ID.')
         return
 
     collection = MONGO_DB['Counting']
-    server_doc = collection.find_one({'server': ctx.guild.id})
+    server_doc = await collection.find_one({'server': ctx.guild.id})
 
     if server_doc is not None:
         server_doc = dict(server_doc)
         if server_doc['channel'] == channel_id:
-            await ctx.send('This is already the counting channel.')
+            await reply(ctx, 'This is already the counting channel.')
             return
-        collection.delete_one(server_doc)
+        await collection.delete_one(server_doc)
         server_doc['channel'] = channel_id
         for_new_channel = f'Counting has been moved to this channel. The next number is {server_doc["count"] + 1}.'
         if server_doc['last_user'] != 0:
@@ -913,8 +910,8 @@ async def set_counting_channel(ctx, *, channel):
         server_doc = {'server': ctx.guild.id, 'channel': channel_id, 'count': 0, 'record': 0, 'users': {}, 'last_user': 0, 'grace_period': 1, 'last_message': 0}
         await channel.send('Welcome to the counting channel! Type "1" to begin.')
 
-    collection.insert_one(server_doc)
-    await ctx.send(f'<#{channel_id}> has been set as the counting channel.')
+    await collection.insert_one(server_doc)
+    await reply(ctx, f'<#{channel_id}> has been set as the counting channel.')
 
 
 @bot.command(name='countinggraceperiod', aliases=['grace'])
@@ -931,14 +928,14 @@ async def set_counting_grace_period(ctx, *, period=None):
         return
 
     collection = MONGO_DB['Counting']
-    server_doc = collection.find_one({'server': ctx.guild.id})
+    server_doc = await collection.find_one({'server': ctx.guild.id})
 
     if not server_doc:
-        await ctx.send('Please set a counting channel first, using +countingchannel [channel].')
+        await reply(ctx, 'Please set a counting channel first, using +countingchannel [channel].')
         return
     
-    collection.update_one({'server': ctx.guild.id}, {'$set': {'grace_period': period}})
-    await ctx.send('Grace period updated successfully.')
+    await collection.update_one({'server': ctx.guild.id}, {'$set': {'grace_period': period}})
+    await reply(ctx, 'Grace period updated successfully.')
 
 
 async def counting_punishment_thread(time_set, guild_id, user_id, role_id):
@@ -962,7 +959,7 @@ async def init_counting_punishments():
 
     to_add = []
 
-    for item in list(collection.find()):
+    for item in await (collection.find().to_list(None)):
         item = dict(item)
         for user_id in item['users']:
             try:
@@ -1008,10 +1005,10 @@ async def set_timezone(ctx, *, tz=None):
         '**If this is correct, click the checkmark.** Otherwise, try again.'
     )
 
-    doc = collection.find_one({'user_id': ctx.author.id})
+    doc = await collection.find_one({'user_id': ctx.author.id})
 
     if doc is None:
-        collection.insert_one(
+        await collection.insert_one(
             {
                 'user_id': ctx.author.id,
                 'is_set': False,
@@ -1021,7 +1018,7 @@ async def set_timezone(ctx, *, tz=None):
             }
         )
     else:
-        collection.update_one(doc,
+        await collection.update_one(doc,
             {
                 '$set':
                 {'is_set': False, 'timezone': timezone, 'message_id': msg_sent.id}
@@ -1032,13 +1029,13 @@ async def set_timezone(ctx, *, tz=None):
 
 async def confirm_timezone(user_id, channel):
     collection = MONGO_DB['Timezones']
-    collection.update_one({'user_id': user_id},
+    await collection.update_one({'user_id': user_id},
         {
             '$set': {'is_set': True}
         }
     )
 
-    await channel.send('Your timezone was successfully added.')
+    await channel.send('Your timezone was successfully added.') # TODO modify this to include the user's name
 
 
 @bot.command(name='dateformat')
@@ -1056,10 +1053,10 @@ async def set_date_format(ctx, *, format=None):
         return
 
     collection = MONGO_DB['Timezones']
-    doc = collection.find_one({'user_id': ctx.author.id})
+    doc = await collection.find_one({'user_id': ctx.author.id})
 
     if doc is None:
-        collection.insert_one(
+        await collection.insert_one(
             {
                 'user_id': ctx.author.id,
                 'is_set': False,
@@ -1069,11 +1066,11 @@ async def set_date_format(ctx, *, format=None):
             }
         )
     else:
-        collection.update_one({'user_id': ctx.author.id},
+        await collection.update_one({'user_id': ctx.author.id},
             {'$set': {'ddmmyy': ddmmyy}}
         )
 
-    await ctx.send('Preference updated.')
+    await reply(ctx, 'Preference updated.')
 
 
 # Tic Tac Toe commands should also be in a separate file.
@@ -1090,7 +1087,7 @@ async def tic_tac_toe(ctx, row=None, col=None):
     """
     collection = MONGO_DB['TicTacToe']
     query = {'server': ctx.message.guild.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
     if server_doc is None:
         await ctx.send('You are not currently in a Tic Tac Toe game. Use +tttinvite to invite someone.')
         return
@@ -1148,11 +1145,11 @@ async def tic_tac_toe(ctx, row=None, col=None):
     if game.check_game_over():
         await ctx.send(f'```{str(game)}```')
         await ctx.send('GAME OVER!')
-        collection.update_one(query, {'$pull': {'games': game_doc}})
+        await collection.update_one(query, {'$pull': {'games': game_doc}})
     elif game.board_full():
         await ctx.send(f'```{str(game)}```')
         await ctx.send('DRAW!')
-        collection.update_one(query, {'$pull': {'games': game_doc}})
+        await collection.update_one(query, {'$pull': {'games': game_doc}})
     else:
         await ctx.send(f'```{str(game)}```')
         if ctx.author == player_x:
@@ -1160,7 +1157,7 @@ async def tic_tac_toe(ctx, row=None, col=None):
         else:
             await ctx.send(f'{player_x.nick if player_x.nick else player_x.name}\'s turn! (**X**)')
         expires = time.time() + TTT_GAME_EXPIRATION_TIME
-        collection.update_one({'server': ctx.guild.id, 'games': game_doc}, {'$set': {'games.$': {
+        await collection.update_one({'server': ctx.guild.id, 'games': game_doc}, {'$set': {'games.$': {
             'x': player_x.id,
             'o': player_o.id,
             'board': game.get_game_list(),
@@ -1177,9 +1174,9 @@ async def tic_tac_toe_leave(ctx):
     """
     collection = MONGO_DB['TicTacToe']
     query = {'server': ctx.message.guild.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
     if server_doc is None:
-        await ctx.send('You are not in a Tic Tac Toe game.')
+        await reply(ctx, 'You are not in a Tic Tac Toe game.')
         return
 
     for i_game in server_doc['games']:
@@ -1192,12 +1189,12 @@ async def tic_tac_toe_leave(ctx):
             player_is_x = False
             break
     else:
-        await ctx.send('You are not in a Tic Tac Toe game.')
+        await reply(ctx, 'You are not in a Tic Tac Toe game.')
         return
 
     opponent = yelobot_utils.get(bot.get_all_members(), id=(game['o'] if player_is_x else game['x']), guild=ctx.message.guild)
     await ctx.send(f'{opponent.nick if opponent.nick else opponent.name} wins!')
-    collection.update_one(query, {'$pull': {'games': game}})
+    await collection.update_one(query, {'$pull': {'games': game}})
 
 
 @bot.command(name='tictactoeinvite', aliases=['tttinvite', 'tttinv', 'tictactoeinv'])
@@ -1222,31 +1219,31 @@ async def tic_tac_toe_invite(ctx, *, user=None):
     collection = MONGO_DB['TicTacToe']
 
     server_query = {'server': ctx.guild.id}
-    server_doc = collection.find_one(server_query)
+    server_doc = await collection.find_one(server_query)
 
     if server_doc is None:
         server_doc = {'server': ctx.guild.id, 'invites': [], 'games': []}
-        collection.insert_one(server_doc)
+        await collection.insert_one(server_doc)
 
     author_in_game = len(server_doc['games']) > 0 and any(game['x'] == ctx.author.id or game['o'] == ctx.author.id for game in server_doc['games'])
 
     if author_in_game:
-        await ctx.send('You can\'t invite someone when you are already in a game!')
+        await reply(ctx, 'You can\'t invite someone when you are already in a game!')
         return
 
     already_invited = len(server_doc['invites']) > 0 and any([invite['to'] == member.id for invite in server_doc['invites']])
 
     if already_invited:
-        await ctx.send('That user already has a pending invitation...')
+        await reply(ctx, 'That user already has a pending invitation...')
         return
 
     other_in_game = len(server_doc['games']) > 0 and any(game['x'] == member.id or game['o'] == member.id for game in server_doc['games'])
 
     if other_in_game:
-        await ctx.send(f'{member.nick if member.nick else member.name} is already in a Tic Tac Toe game.')
+        await reply(ctx, f'{member.nick if member.nick else member.name} is already in a Tic Tac Toe game.')
 
     expires = time.time() + TTT_INVITE_EXPIRATION_TIME
-    collection.update_one(server_query, {'$push': {'invites': {'to': member.id, 'from': ctx.author.id, 'expires': expires, 'channel': ctx.message.channel.id}}})
+    await collection.update_one(server_query, {'$push': {'invites': {'to': member.id, 'from': ctx.author.id, 'expires': expires, 'channel': ctx.message.channel.id}}})
     await ctx.send(f'{member.mention}, {ctx.author.nick if ctx.author.nick else ctx.author.name} has invited you to Tic Tac Toe. Use +tttaccept or +tttdecline.')
     await tic_tac_toe_invite_thread(expires, ctx.message.channel.id, ctx.author.id, member.id)
 
@@ -1259,10 +1256,10 @@ async def tic_tac_toe_accept(ctx):
     """
     collection = MONGO_DB['TicTacToe']
     query = {'server': ctx.guild.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
 
     if server_doc is None:
-        await ctx.send('You have not been invited to a Tic Tac Toe game.')
+        await reply(ctx, 'You have not been invited to a Tic Tac Toe game.')
         return
 
     for invite in server_doc['invites']:
@@ -1270,17 +1267,17 @@ async def tic_tac_toe_accept(ctx):
             invitation = invite
             break
     else:
-        await ctx.send('You have not been invited to a Tic Tac Toe game.')
+        await reply(ctx, 'You have not been invited to a Tic Tac Toe game.')
         return
 
-    collection.update_one(query, {'$pull': {'invites': {'to': ctx.author.id, 'from': invitation['from'], 'expires': invitation['expires'], 'channel': invitation['channel']}}})
+    await collection.update_one(query, {'$pull': {'invites': {'to': ctx.author.id, 'from': invitation['from'], 'expires': invitation['expires'], 'channel': invitation['channel']}}})
 
     from_starts = random.random() > .5
 
     game = TicTacToe()
 
     expires = time.time() + TTT_GAME_EXPIRATION_TIME
-    collection.update_one(query, {'$push': {'games': {
+    await collection.update_one(query, {'$push': {'games': {
         'x': invitation['from'] if from_starts else invitation['to'],
         'o': invitation['to'] if from_starts else invitation['from'],
         'board': game.get_game_list(),
@@ -1310,10 +1307,10 @@ async def tic_tac_toe_decline(ctx):
     """
     collection = MONGO_DB['TicTacToe']
     query = {'server': ctx.guild.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
 
     if server_doc is None:
-        await ctx.send('You have not been invited to a Tic Tac Toe game.')
+        await reply(ctx, 'You have not been invited to a Tic Tac Toe game.')
         return
 
     for invite in server_doc['invites']:
@@ -1321,13 +1318,13 @@ async def tic_tac_toe_decline(ctx):
             invitation = invite
             break
     else:
-        await ctx.send('You have not been invited to a Tic Tac Toe game.')
+        await reply(ctx, 'You have not been invited to a Tic Tac Toe game.')
         return
 
-    collection.update_one(query, {'$pull': {'invites': {'to': ctx.author.id, 'from': invitation['from'], 'expires': invitation['expires'], 'channel': invitation['channel']}}})
+    await collection.update_one(query, {'$pull': {'invites': {'to': ctx.author.id, 'from': invitation['from'], 'expires': invitation['expires'], 'channel': invitation['channel']}}})
     from_member = yelobot_utils.get(bot.get_all_members(), id=int(invitation['from']), guild=ctx.message.guild)
 
-    await ctx.send(f'You have declined {from_member.nick if from_member.nick else from_member.name}\'s Tic Tac Toe invitation.')
+    await reply(ctx, f'You have declined {from_member.nick if from_member.nick else from_member.name}\'s Tic Tac Toe invitation.')
 
 
 async def tic_tac_toe_invite_thread(time_set, channel_id, from_id, to_id):
@@ -1341,14 +1338,14 @@ async def tic_tac_toe_invite_thread(time_set, channel_id, from_id, to_id):
 
     collection = MONGO_DB['TicTacToe']
     query = {'server': server.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
 
     invite_still_here = len(server_doc['invites']) > 0 and \
         any([invite['to'] == to_id and invite['from'] == from_id and invite['expires'] == time_set and invite['channel'] == channel_id \
         for invite in server_doc['invites']])
 
     if invite_still_here:
-        collection.update_one(query, {'$pull': {'invites': {'to': to_id, 'from': from_id, 'expires': time_set, 'channel': channel_id}}})
+        await collection.update_one(query, {'$pull': {'invites': {'to': to_id, 'from': from_id, 'expires': time_set, 'channel': channel_id}}})
         from_name = from_member.nick if from_member.nick else from_member.name
         to_name = to_member.nick if to_member.nick else to_member.name
         await channel.send(f'{from_name}\'s Tic Tac Toe invite to {to_name} has expired.')
@@ -1360,7 +1357,7 @@ async def init_tic_tac_toe_invites():
     to_init = []
     collection = MONGO_DB['TicTacToe']
 
-    for server_doc in list(collection.find()):
+    for server_doc in await (collection.find()).to_list(None):
         for invite in server_doc['invites']:
             to_init.append([invite['expires'], invite['channel'], invite['from'], invite['to']])
 
@@ -1380,7 +1377,7 @@ async def tic_tac_toe_game_thread(time_set, channel_id, player_x_id, player_o_id
 
     collection = MONGO_DB['TicTacToe']
     query = {'server': server.id}
-    server_doc = collection.find_one(query)
+    server_doc = await collection.find_one(query)
 
     game_unchanged = False
     for game in server_doc['games']:
@@ -1389,7 +1386,7 @@ async def tic_tac_toe_game_thread(time_set, channel_id, player_x_id, player_o_id
             break
 
     if game_unchanged:
-        collection.update_one(query, {'$pull': {'games': {'x': player_x_id, 'o': player_o_id, 'expires': time_set}}})
+        await collection.update_one(query, {'$pull': {'games': {'x': player_x_id, 'o': player_o_id, 'expires': time_set}}})
 
         x_name = x_member.nick if x_member.nick else x_member.name
         o_name = o_member.nick if o_member.nick else o_member.name
@@ -1402,7 +1399,7 @@ async def init_tic_tac_toe_games():
     to_init = []
     collection = MONGO_DB['TicTacToe']
 
-    for server_doc in list(collection.find()):
+    for server_doc in await (collection.find()).to_list(None):
         for invite in server_doc['games']:
             to_init.append([invite['expires'], invite['channel'], invite['x'], invite['o']])
 
@@ -1785,12 +1782,12 @@ async def set_country(ctx, *, country=None):
 
     collection = MONGO_DB['Countries']
 
-    doc = collection.find_one({'user_id': ctx.author.id})
+    doc = await collection.find_one({'user_id': ctx.author.id})
 
     if not doc:
-        collection.insert_one({'user_id': ctx.author.id, 'country': data[lower_country]})
+        await collection.insert_one({'user_id': ctx.author.id, 'country': data[lower_country]})
     else:
-        collection.update_one({'user_id': ctx.author.id}, {'$set': {'country': data[lower_country]}})
+        await collection.update_one({'user_id': ctx.author.id}, {'$set': {'country': data[lower_country]}})
 
     await reply(ctx, 'Country updated.')
 
@@ -1831,11 +1828,11 @@ async def steam_price(ctx, *, game):
         filtered_results.append(str(result_list[i]['data-ds-appid']))
         i += 1
 
-    def pagination_callback(app_id):
+    async def pagination_callback(app_id):
         collection = MONGO_DB['Countries']
 
         currency = 'us'
-        doc = collection.find_one({'user_id': ctx.author.id})
+        doc = await collection.find_one({'user_id': ctx.author.id})
         if doc:
             currency = doc['country']
 
@@ -1873,8 +1870,8 @@ async def steam_price(ctx, *, game):
         return output_string
 
     await Pagination.send_paginated_embed(
-        ctx, filtered_results, title=f'Steam search results for: {game}', color=discord.Color.blurple(),
-        fields_on_page=1, read_data_fn=pagination_callback
+            ctx, filtered_results, title=f'Steam search results for: {game}', color=discord.Color.blurple(),
+            fields_on_page=1, read_data_async_fn=pagination_callback
         )
 
 
@@ -2038,12 +2035,13 @@ async def taglist(ctx: commands.Context):
     List all of the tags in this server.
     +taglist
     """
-    full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+    collection = MONGO_DB['ImageTags']
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
 
     if full_dict:
         images = full_dict['tags']
     else:
-        await ctx.send('This server has no images saved.')
+        await reply(ctx, 'This server has no images saved.')
         return
 
     def read_data(tag):
@@ -2067,7 +2065,8 @@ async def image(ctx, *, tag=None):
     Post an image from the collection. If you leave the tag argument blank, the image is chosen randomly.
     +image [Tag]
     """
-    full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+    collection = MONGO_DB['ImageTags']
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
 
     if not full_dict:
         await reply(ctx, 'This server has no images saved.')
@@ -2125,7 +2124,8 @@ async def image_count(ctx):
     Count how many images are currently in the collection.
     +imagecount
     """
-    full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+    collection = MONGO_DB['ImageTags']
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
 
     if not full_dict:
         await reply(ctx, 'This server has no images saved. (Add some using +addimage)')
@@ -2154,11 +2154,13 @@ async def add_image(ctx, tag=None, url=None):
     if not ('.png' in url or '.jpg' in url or '.jpeg' in url or '.gif' in url):
         await reply(ctx, 'That is not a valid image.')
         return
+    
+    collection = MONGO_DB['ImageTags']
 
-    full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
     if not full_dict:
-        MONGO_DB['ImageTags'].insert_one({'server': ctx.message.guild.id, 'tags': dict()})
-        full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+        await collection.insert_one({'server': ctx.message.guild.id, 'tags': dict()})
+        full_dict = await collection.find_one({'server': ctx.message.guild.id})
     images = full_dict['tags']
     
     for key in images.keys():
@@ -2166,7 +2168,7 @@ async def add_image(ctx, tag=None, url=None):
             await reply(ctx, 'That tag already exists.')
             return
 
-    MONGO_DB['ImageTags'].update_one({'server': ctx.message.guild.id}, {'$set': {f'tags.{tag}': {'url': url, 'author': ctx.author.id}}})    
+    await collection.update_one({'server': ctx.message.guild.id}, {'$set': {f'tags.{tag}': {'url': url, 'author': ctx.author.id}}})    
 
     await reply(ctx, f'{tag} added.')
 
@@ -2187,7 +2189,7 @@ async def user_tags(ctx: commands.Context, *, user: str=None):
             return
 
     collection = MONGO_DB['ImageTags']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     tags = [k for k, v in doc['tags'].items() if isinstance(v, dict) and v['author'] == user.id]
 
     if not tags:
@@ -2204,13 +2206,14 @@ async def remove_image(ctx, *, tag=None):
     Remove an image from the collection.
     +removeimage <Tag>
     """
-    full_dict = MONGO_DB['ImageTags'].find_one({'server': ctx.message.guild.id})
+    collection = MONGO_DB['ImageTags']
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
 
     if tag not in full_dict['tags']:
         await reply(ctx, 'This is not an image tag.')
         return
 
-    MONGO_DB['ImageTags'].update_one({'server': ctx.message.guild.id}, {'$unset': {f'tags.{tag}': ''}})  
+    await collection.update_one({'server': ctx.message.guild.id}, {'$unset': {f'tags.{tag}': ''}})  
     await reply(ctx, 'Image removed.')
 
 
@@ -2227,7 +2230,7 @@ async def edit_tag(ctx, tag1=None, tag2=None):
 
     collection = MONGO_DB['ImageTags']
 
-    full_dict = collection.find_one({'server': ctx.message.guild.id})
+    full_dict = await collection.find_one({'server': ctx.message.guild.id})
 
     if tag1 not in full_dict['tags'].keys():
         await reply(ctx, 'The tag you are attempting to edit does not exist.')
@@ -2238,8 +2241,8 @@ async def edit_tag(ctx, tag1=None, tag2=None):
         return
 
     image = full_dict['tags'][tag1]    
-    collection.update_one({'server': ctx.message.guild.id}, {'$set': {f'tags.{tag2}': image}})
-    collection.update_one({'server': ctx.message.guild.id}, {'$unset': {f'tags.{tag1}': image}})
+    await collection.update_one({'server': ctx.message.guild.id}, {'$set': {f'tags.{tag2}': image}})
+    await collection.update_one({'server': ctx.message.guild.id}, {'$unset': {f'tags.{tag1}': image}})
 
     await reply(ctx, 'Tag changed.')
 
@@ -2252,12 +2255,12 @@ async def kelp_role(ctx: commands.Context, role=None):
     +kelprole <Role ID>
     """
     collection = MONGO_DB['KelpRole']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     if role is None:
         if doc is None:
             await reply(ctx, '+kelprole <Role ID>')
         else:
-            collection.delete_one({'server': ctx.guild.id})
+            await collection.delete_one({'server': ctx.guild.id})
             await reply(ctx, 'The kelp role has been removed.')
         return
     
@@ -2274,9 +2277,9 @@ async def kelp_role(ctx: commands.Context, role=None):
         return
     
     if doc:
-        collection.update_one({'server': ctx.guild.id}, {'$set': {'role': role.id}})
+        await collection.update_one({'server': ctx.guild.id}, {'$set': {'role': role.id}})
     else:
-        collection.insert_one({'server': ctx.guild.id, 'role': role.id})
+        await collection.insert_one({'server': ctx.guild.id, 'role': role.id})
 
     await reply(ctx, f'The Kelp role has been set to **{role.name}**.')
 
@@ -2294,7 +2297,7 @@ async def kelp(ctx):
         return
 
     collection = MONGO_DB['KelpRole']
-    doc = collection.find_one({'server': ctx.guild.id})
+    doc = await collection.find_one({'server': ctx.guild.id})
     has_role = doc is not None
     if has_role:
         kelp_role: discord.Role = yelobot_utils.get(ctx.guild.roles, id=int(doc['role']))
@@ -2355,7 +2358,7 @@ async def current_time(ctx, *, location=None):
     if user or location.split()[0].lower() == 'user':
         collection = MONGO_DB['Timezones']
         if user:
-            data = collection.find_one({'user_id': user.id})
+            data = await collection.find_one({'user_id': user.id})
             if not data or not data['is_set']:
                 await reply(ctx, f'{usage}\nIf you want to see your local time, first use +settimezone.')
                 return
@@ -2719,7 +2722,7 @@ async def wordcoin(ctx):
         await reply(ctx, 'Wordcoin balance: infinity')
         return
 
-    doc = collection.find_one({'user': ctx.author.id})
+    doc = await collection.find_one({'user': ctx.author.id})
     if not doc:
         await reply(ctx, 'Wordcoin balance: 0')
         return
@@ -2746,13 +2749,13 @@ async def give_wordcoin(ctx, *, user=None):
         return
     
     collection = MONGO_DB['Wordcoin']
-    doc = collection.find_one({'user': user_found.id})
+    doc = await collection.find_one({'user': user_found.id})
     if not doc:
-        collection.insert_one({'user': user_found.id, 'balance': 1})
+        await collection.insert_one({'user': user_found.id, 'balance': 1})
         new_balance = 1
     else:
         new_balance = int(doc['balance']) + 1
-        collection.update_one({'user': user_found.id}, {'$set': {'balance': new_balance}})
+        await collection.update_one({'user': user_found.id}, {'$set': {'balance': new_balance}})
     
     await reply(ctx, f'{user_found.nick if user_found.nick else user_found.name} has been awarded 1 wordcoin. Their wordcoin balance is now {new_balance}.')
 
@@ -2776,7 +2779,7 @@ async def remove_wordcoin(ctx, *, user=None):
         return
     
     collection = MONGO_DB['Wordcoin']
-    doc = collection.find_one({'user': user_found.id})
+    doc = await collection.find_one({'user': user_found.id})
     if not doc:
         await reply(ctx, 'This user has no wordcoin.')
         return
@@ -2785,7 +2788,7 @@ async def remove_wordcoin(ctx, *, user=None):
         if new_balance < 0:
             await reply(ctx, 'This user does not have 5 wordcoin.')
             return
-        collection.update_one({'user': user_found.id}, {'$set': {'balance': new_balance}})
+        await collection.update_one({'user': user_found.id}, {'$set': {'balance': new_balance}})
     
     await reply(ctx, f'{user_found.nick if user_found.nick else user_found.name} has redeemed 5 wordcoin. Their wordcoin balance is now {new_balance}.')
 
@@ -3046,7 +3049,8 @@ async def bot_is_talking() -> bool:
     await bot.wait_until_ready()
 
     if IS_TALKING is None:
-        IS_TALKING = bool(MONGO_DB['Talking'].find_one()['talking'])
+        collection = MONGO_DB['Talking']
+        IS_TALKING = bool((await collection.find_one())['talking'])
     
     return IS_TALKING
 
@@ -3128,18 +3132,25 @@ async def main():
     if ANNOUNCE_MINECRAFT_EVENTS:
         check_minecraft_events.start()
 
-    async with bot:
-        for task in StartupTask.tasks:
-            StartupTask.bot.loop.create_task(task)
-        StartupTask.tasks = []
+    for task in StartupTask.tasks:
+        StartupTask.bot.loop.create_task(task)
+    StartupTask.tasks = []
 
-        await bot.start(BOT_TOKEN)
+    await bot.start(BOT_TOKEN)
 
 
 async def run():
-    async with aiohttp.ClientSession() as sess:
-        bot.set_aiohttp_sess(sess)
-        await main()
+    global MONGO_DB
+
+    async with bot:
+        async with aiohttp.ClientSession(loop=bot.loop) as sess:
+            MONGO_DB = AsyncIOMotorClient(
+                f'mongodb+srv://yelofelo:{MONGO_PASS}@yelobot.exzzq.mongodb.net/YeloBot?retryWrites=true&w=majority',
+                tlsCAFile=certifi.where(),
+                io_loop=bot.loop
+            ).YeloBot
+            bot.set_aiohttp_sess(sess)
+            await main()
 
 if __name__ == '__main__':
     kelp_cooldown = Cooldown(43200)

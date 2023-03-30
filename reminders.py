@@ -99,7 +99,7 @@ class ReminderModal2(discord.ui.Modal, title='Create Reminder (Page 2)'):
             return
 
         item = {'user': interaction.user.id, 'channel': interaction.channel_id, 'time': unix, 'message': self.message_value}
-        self.collection.insert_one(item)
+        await self.collection.insert_one(item)
 
         await interaction.response.edit_message(content='Reminder set.', view=None)
 
@@ -178,21 +178,22 @@ class Reminders(commands.Cog):
         user = yelobot_utils.get(self.bot.get_all_members(), id=user_id)
         to_send = f'{user.mention} {message}'
 
+        collection = self.MONGO_DB['Reminders']
+
         if time_set - time.time() <= 0:
             await channel.send(to_send)
         else:
             await asyncio.sleep(time_set - time.time())
-            if not self.MONGO_DB['Reminders'].find_one(query):
+            if not await collection.find_one(query):
                 return
             await channel.send(to_send)
 
-        collection = self.MONGO_DB['Reminders']
-        collection.delete_many(query)
+        await collection.delete_many(query)
 
     @app_commands.command(name='remindme', description='Creates an absolute-time reminder.')
     async def remindme_app(self, interaction: discord.Interaction):
         collection = self.MONGO_DB['Timezones']
-        doc = collection.find_one({'user_id': interaction.user.id})
+        doc = await collection.find_one({'user_id': interaction.user.id})
         if not doc or not doc['is_set']:
             await interaction.response.send_message('You have not yet set a timezone. Please use +settimezone first.')
             return
@@ -238,7 +239,7 @@ class Reminders(commands.Cog):
             is_absolute_time = True
             collection = self.MONGO_DB['Timezones']
 
-            doc = collection.find_one({'user_id': ctx.author.id})
+            doc = await collection.find_one({'user_id': ctx.author.id})
 
             if doc is None or not doc['is_set']:
                 await reply(ctx, 'Your time does not match the usage (or, for absolute times, you have not yet set a timezone using +settimezone).\n' + usage)
@@ -289,7 +290,7 @@ class Reminders(commands.Cog):
 
         collection = self.MONGO_DB['Reminders']
         item = {'user': ctx.author.id, 'channel': ctx.message.channel.id, 'time': time_to_remind, 'message': message}
-        collection.insert_one(item)
+        await collection.insert_one(item)
 
         await reply(ctx, 'Reminder set.' + ('\n*Absolute-time reminders are easier to set using the slash command (/remindme). Try that next time :)*' if is_absolute_time else ''))
 
@@ -308,7 +309,7 @@ class Reminders(commands.Cog):
 
         reminders = []
 
-        for reminder in collection.find(query):
+        for reminder in await (collection.find(query)).to_list(None):
             channel = self.bot.get_channel(int(reminder['channel']))
             if channel is not None and channel.guild.id == ctx.guild.id:
                 reminders.append(reminder)
@@ -344,7 +345,8 @@ class Reminders(commands.Cog):
                 message_data['on_page'] = message_data['field_idx'] + 1
 
                 if time.time() < reminder['time']:
-                    self.MONGO_DB['Reminders'].delete_one(reminder)
+                    collection = self.MONGO_DB['Reminders']
+                    await collection.delete_one(reminder)
                 
                 if message_data['max_page'] == 0:
                     message_data['additional_buttons'][0].disabled = True
@@ -389,7 +391,7 @@ class Reminders(commands.Cog):
 
         to_add = []
 
-        for item in list(collection.find()):
+        for item in await (collection.find()).to_list(None):
             try:
                 server = (await self.bot.fetch_channel(int(item['channel']))).guild
                 await server.fetch_member(int(item['user']))

@@ -14,7 +14,7 @@ class MessageFilter(commands.Cog):
         self.regex_computed = False
 
     async def compute_regex(self, server_id):
-        doc = self.collection.find_one({'server': server_id})
+        doc = await self.collection.find_one({'server': server_id})
         self.channel_logging_dict[server_id] = self.bot.get_channel(int(doc['log_channel'])) if int(doc['log_channel']) else None
         if len(doc['words']) != 0:
             self.regex_dict[server_id] = re.compile(r'^(.*[^a-z])?(' + '|'.join((f'({word})' for word in doc['words'])) + r')([^a-z].*)?$')
@@ -22,8 +22,8 @@ class MessageFilter(commands.Cog):
             if server_id in self.regex_dict:
                 del self.regex_dict[server_id]
 
-    def compute_all_regex(self):
-        docs = self.collection.find()
+    async def compute_all_regex(self):
+        docs = await (self.collection.find()).to_list(None)
         for doc in docs:
             server_id = int(doc['server'])
             self.channel_logging_dict[server_id] = self.bot.get_channel(int(doc['log_channel'])) if int(doc['log_channel']) else None
@@ -37,7 +37,7 @@ class MessageFilter(commands.Cog):
         if discord.Permissions(kick_members=True).is_subset(message.author.guild_permissions):
             return False
         if not self.regex_computed:
-            self.compute_all_regex()
+            await self.compute_all_regex()
             self.regex_computed = True
         if message.guild.id in self.regex_dict and (mo := re.match(self.regex_dict[message.guild.id], message.content.lower())):
             log_channel = self.channel_logging_dict[int(message.guild.id)]
@@ -63,7 +63,7 @@ class MessageFilter(commands.Cog):
             return
         
         await self.add_server_if_doesnt_exist(ctx.guild.id)
-        self.collection.update_one({'server': ctx.guild.id}, {'$push': {'words': term}})
+        await self.collection.update_one({'server': ctx.guild.id}, {'$push': {'words': term}})
         await self.compute_regex(ctx.guild.id)
         await reply(ctx, 'The term has been added to the filter.')
     
@@ -79,11 +79,11 @@ class MessageFilter(commands.Cog):
             return
         term = term.lower()
         await self.add_server_if_doesnt_exist(ctx.guild.id)
-        doc = self.collection.find_one({'server': ctx.guild.id})
+        doc = await self.collection.find_one({'server': ctx.guild.id})
         if term not in doc['words']:
             await reply(ctx, 'This term was not in the filter.')
             return
-        self.collection.update_one({'server': ctx.guild.id}, {'$pull': {'words': term}})
+        await self.collection.update_one({'server': ctx.guild.id}, {'$pull': {'words': term}})
         await self.compute_regex(ctx.guild.id)
         await reply(ctx, 'The term has been removed from the filter.')
 
@@ -95,7 +95,7 @@ class MessageFilter(commands.Cog):
         +listfilter
         """
         await self.add_server_if_doesnt_exist(ctx.guild.id)
-        doc = self.collection.find_one({'server': ctx.guild.id})
+        doc = await self.collection.find_one({'server': ctx.guild.id})
         filtered = list(doc['words'])
         if not filtered:
             await reply(ctx, 'This server currently has no filter.')
@@ -111,7 +111,7 @@ class MessageFilter(commands.Cog):
         """
         await self.add_server_if_doesnt_exist(ctx.guild.id)
         if channel is None:
-            self.collection.update_one({'server': ctx.guild.id}, {'$set': {'log_channel': 0}})
+            await self.collection.update_one({'server': ctx.guild.id}, {'$set': {'log_channel': 0}})
             await reply(ctx, 'Disable the logging of filtered messages.')
             return
         
@@ -120,10 +120,10 @@ class MessageFilter(commands.Cog):
             await reply(ctx, '+filterlog <channel>')
             return
         
-        self.collection.update_one({'server': ctx.guild.id}, {'$set': {'log_channel': channel.id}})
+        await self.collection.update_one({'server': ctx.guild.id}, {'$set': {'log_channel': channel.id}})
         await self.compute_regex(ctx.guild.id)
         await reply(ctx, f'Log channel set to {channel.mention}.')
     
     async def add_server_if_doesnt_exist(self, server_id):
-        if not self.collection.find_one({'server': server_id}):
-            self.collection.insert_one({'server': server_id, 'words': [], 'log_channel': 0})
+        if not await self.collection.find_one({'server': server_id}):
+            await self.collection.insert_one({'server': server_id, 'words': [], 'log_channel': 0})

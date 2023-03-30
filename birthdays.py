@@ -28,12 +28,12 @@ class Birthdays(commands.Cog):
             return
 
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
-            collection.insert_one({'server': ctx.guild.id, 'role': int(role_id), 'channel': 0, 'message': '', 'users': {}})
+            await collection.insert_one({'server': ctx.guild.id, 'role': int(role_id), 'channel': 0, 'message': '', 'users': {}})
         else:
-            collection.update_one({'server': ctx.guild.id}, {'$set': {'role': int(role_id)}})
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {'role': int(role_id)}})
 
         await reply(ctx, 'Birthday role updated successfully.')
 
@@ -54,12 +54,12 @@ class Birthdays(commands.Cog):
             return
         
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
-            collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': int(channel_id), 'message': '', 'users': {}})
+            await collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': int(channel_id), 'message': '', 'users': {}})
         else:
-            collection.update_one({'server': ctx.guild.id}, {'$set': {'channel': int(channel_id)}})
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {'channel': int(channel_id)}})
 
         await reply(ctx, 'Birthday channel updated successfully.')
 
@@ -75,12 +75,12 @@ class Birthdays(commands.Cog):
             return
         
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
-            collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': message, 'users': {}})
+            await collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': message, 'users': {}})
         else:
-            collection.update_one({'server': ctx.guild.id}, {'$set': {'message': message}})
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {'message': message}})
 
         await reply(ctx, 'Birthday message updated successfully.')
 
@@ -104,7 +104,7 @@ class Birthdays(commands.Cog):
             return
 
         tz_collection = self.MONGO_DB['Timezones']
-        tz_doc = tz_collection.find_one({'user_id': ctx.author.id})
+        tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
 
         if tz_doc:
             ddmmyy = tz_doc['ddmmyy']
@@ -112,11 +112,11 @@ class Birthdays(commands.Cog):
             ddmmyy = False
         
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
             doc = {'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': '', 'users': {}}
-            collection.insert_one(doc)
+            await collection.insert_one(doc)
 
         user_doc = doc['users'].get(str(ctx.author.id))
 
@@ -132,9 +132,9 @@ class Birthdays(commands.Cog):
             return
 
         if user_doc:
-            collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}.month': month, f'users.{ctx.author.id}.day': day, f'users.{ctx.author.id}.is_birthday': False}})
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}.month': month, f'users.{ctx.author.id}.day': day, f'users.{ctx.author.id}.is_birthday': False}})
         else:
-            collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}': {
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}': {
                 'month': month, 'day': day, 'is_birthday': False
             }}})
 
@@ -160,7 +160,7 @@ class Birthdays(commands.Cog):
                 return
         
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if doc:
             usr_doc = doc['users'].get(str(user.id))
@@ -169,7 +169,8 @@ class Birthdays(commands.Cog):
             await reply(ctx, f'{user.nick if user.nick else user.name} has not set a birthday.')
         else:
             ddmmyy = False
-            tzdoc = self.MONGO_DB['Timezones'].find_one({'user_id': ctx.author.id})
+            tz_collection = self.MONGO_DB['Timezones']
+            tzdoc = await tz_collection.find_one({'user_id': ctx.author.id})
             if tzdoc and tzdoc['ddmmyy']:
                 ddmmyy = True
             
@@ -194,13 +195,13 @@ class Birthdays(commands.Cog):
         tz_collection = self.MONGO_DB['Timezones']
 
         ddmmyy = False
-        tz_doc = self.MONGO_DB['Timezones'].find_one({'user_id': ctx.author.id})
+        tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
         if tz_doc and tz_doc['ddmmyy']:
             ddmmyy = True
 
         for month, day, user_id in birthdays:
             
-            tz_doc = tz_collection.find_one({'user_id': user_id})
+            tz_doc = await tz_collection.find_one({'user_id': user_id})
             if tz_doc and tz_doc['is_set']:
                 timezone = tz_doc['timezone']
             else:
@@ -239,7 +240,8 @@ class Birthdays(commands.Cog):
             return
 
         ddmmyy = False
-        tz_doc = self.MONGO_DB['Timezones'].find_one({'user_id': ctx.author.id})
+        tz_collection = self.MONGO_DB['Timezones']
+        tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
         if tz_doc and tz_doc['ddmmyy']:
             ddmmyy = True
 
@@ -251,7 +253,8 @@ class Birthdays(commands.Cog):
             fields.append(f'**{date}** - {member.mention}')
 
         color = discord.Color.blurple()
-        cf_doc = self.MONGO_DB['Birthdays'].find_one({'server': ctx.guild.id})
+        birth_collection = self.MONGO_DB['Birthdays']
+        cf_doc = await birth_collection.find_one({'server': ctx.guild.id})
         if cf_doc and cf_doc['role'] != 0:
             color = discord.utils.get(ctx.guild.roles, id=int(cf_doc['role'])).color
 
@@ -275,7 +278,7 @@ class Birthdays(commands.Cog):
 
         name = user.nick if user.nick else user.name
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if doc:
             usr_doc = doc['users'].get(str(user.id))
@@ -285,10 +288,11 @@ class Birthdays(commands.Cog):
                 await reply(ctx, f'*{name}* has not set a birthday.')
                 return
             
-            collection.update_one({'server': ctx.guild.id}, {'$unset': {f'users.{user.id}': ''}})
+            await collection.update_one({'server': ctx.guild.id}, {'$unset': {f'users.{user.id}': ''}})
             await reply(ctx, f'Removed *{name}*\'s birthday.')
         else:
-            tz_doc = self.MONGO_DB['Timezones'].find_one({'user_id': ctx.author.id})
+            tz_collection = self.MONGO_DB['Timezones']
+            tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
             if tz_doc and tz_doc['ddmmyy']:
                 ddmmyy = True
             else:
@@ -311,12 +315,12 @@ class Birthdays(commands.Cog):
                 return
 
             if not doc:
-                collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': '', 'users': {}})
+                await collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': '', 'users': {}})
 
             if usr_doc:
-                collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}.day': day, f'users.{user.id}.month': month, f'users.{user.id}.is_birthday': False}})
+                await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}.day': day, f'users.{user.id}.month': month, f'users.{user.id}.is_birthday': False}})
             else:
-                collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}': {
+                await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}': {
                     'day': day, 'month': month, 'is_birthday': False
                 }}})
 
@@ -331,7 +335,8 @@ class Birthdays(commands.Cog):
         Remove everyone's birthday role. This command is mostly useful if something went wrong.
         +removebirthdays
         """
-        birthday_role = ctx.guild.get_role(int(self.MONGO_DB['Birthdays'].find_one({'server': ctx.guild.id})['role']))
+        collection = self.MONGO_DB['Birthdays']
+        birthday_role = ctx.guild.get_role(int(await collection.find_one({'server': ctx.guild.id})['role']))
 
         for member in ctx.guild.members:
             if birthday_role.id in {r.id for r in member.roles}:
@@ -341,7 +346,7 @@ class Birthdays(commands.Cog):
         collection = self.MONGO_DB['Birthdays']
         birthdays = []
 
-        doc = collection.find_one({'server': ctx.guild.id})
+        doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
             return []
@@ -362,7 +367,7 @@ class Birthdays(commands.Cog):
             return
 
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': server_id})
+        doc = await collection.find_one({'server': server_id})
         for server_found in user.mutual_guilds:
             if server_found.id == server_id:
                 server = server_found
@@ -389,7 +394,7 @@ class Birthdays(commands.Cog):
             return
 
         collection = self.MONGO_DB['Birthdays']
-        doc = collection.find_one({'server': server_id})
+        doc = await collection.find_one({'server': server_id})
         for server_found in user.mutual_guilds:
             if server_found.id == server_id:
                 server = server_found
@@ -405,14 +410,15 @@ class Birthdays(commands.Cog):
 
     async def init_birthdays(self):
         tz_collection = self.MONGO_DB['Timezones']
+        birth_collection = self.MONGO_DB['Birthdays']
         print('Birthdays are being initialized (no conclusion message).')
 
         while True:
             await asyncio.sleep(10)
 
-            for top_doc in list(self.MONGO_DB['Birthdays'].find()):
+            for top_doc in await (birth_collection.find()).to_list(None):
                 for user_id, item in top_doc['users'].items():
-                    tz_doc = tz_collection.find_one({'user_id': int(user_id)})
+                    tz_doc = await tz_collection.find_one({'user_id': int(user_id)})
                     if tz_doc and tz_doc['is_set']:
                         timezone = tz_doc['timezone']
                     else:
@@ -429,10 +435,10 @@ class Birthdays(commands.Cog):
                     
                     if timestamp < time.time() < timestamp + 60 * 60 * 24 and not item['is_birthday']:
                         await self.birthday_start(str(user_id), top_doc['server'])
-                        self.MONGO_DB['Birthdays'].update_one({'server': top_doc['server']}, {'$set': {f'users.{user_id}.is_birthday': True}})
+                        await birth_collection.update_one({'server': top_doc['server']}, {'$set': {f'users.{user_id}.is_birthday': True}})
                     elif item['is_birthday'] and not (timestamp < time.time() < timestamp + 60 * 60 * 24 ):
                         await self.birthday_end(str(user_id), top_doc['server'])
-                        self.MONGO_DB['Birthdays'].update_one({'server': top_doc['server']}, {'$set': {f'users.{user_id}.is_birthday': False}})
+                        await birth_collection.update_one({'server': top_doc['server']}, {'$set': {f'users.{user_id}.is_birthday': False}})
 
 def valid_date(month, day):
     if month in {1, 3, 5, 7, 8, 10, 12}:

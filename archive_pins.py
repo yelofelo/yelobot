@@ -22,8 +22,8 @@ class ArchivePins(commands.Cog):
             'If archiving pins is currently on, calling this command with no arguments will turn it off.'
 
         if not archive_channel:
-            if self.archiving_is_on(ctx.channel.id):
-                self.toggle_archiving(ctx.channel.id)
+            if await self.archiving_is_on(ctx.channel.id):
+                await self.toggle_archiving(ctx.channel.id)
                 await reply(ctx, 'Archiving turned off.')
                 return
 
@@ -35,11 +35,11 @@ class ArchivePins(commands.Cog):
             await reply(ctx, usage)
             return
 
-        if self.archiving_is_on(ctx.channel.id):
+        if await self.archiving_is_on(ctx.channel.id):
             await reply(ctx, 'Archiving is already on in this channel.')
             return
         
-        self.toggle_archiving(ctx.channel.id, channel.id)
+        await self.toggle_archiving(ctx.channel.id, channel.id)
         await reply(ctx, f'Now archiving {self.bot.get_channel(ctx.channel.id).mention} in {channel.mention}.')
 
     @commands.command('dontarchive', aliases=['permanent', 'noarchive'])
@@ -57,11 +57,11 @@ class ArchivePins(commands.Cog):
             await reply(ctx, 'This message is not currently pinned.')
             return
         
-        if not self.will_archive_message(ctx.channel.id, ctx.message.reference.message_id):
-            self.remove_permanent_message(ctx.channel.id, ctx.message.reference.message_id)
+        if not await self.will_archive_message(ctx.channel.id, ctx.message.reference.message_id):
+            await self.remove_permanent_message(ctx.channel.id, ctx.message.reference.message_id)
             await reply(ctx, 'I will now archive this message when archiving pins.')
         else:
-            self.add_permanent_message(ctx.channel.id, ctx.message.reference.message_id)
+            await self.add_permanent_message(ctx.channel.id, ctx.message.reference.message_id)
             await reply(ctx, 'I will keep this message pinned when archiving pins.')
 
     @commands.command('manualarchive')
@@ -71,7 +71,7 @@ class ArchivePins(commands.Cog):
         Start an archive of the pins in this channel.
         +manualarchive
         """
-        if not self.archiving_is_on(ctx.channel.id):
+        if not await self.archiving_is_on(ctx.channel.id):
             await reply(ctx, 'This channel does not currently archive its pins.')
             return
         
@@ -80,10 +80,10 @@ class ArchivePins(commands.Cog):
         await reply(ctx, 'Done.')
 
     async def commence_archive(self, channel: discord.TextChannel):
-        if not self.archiving_is_on(channel.id):
+        if not await self.archiving_is_on(channel.id):
             return
         
-        doc = self.collection.find_one({'channel': channel.id})
+        doc = await self.collection.find_one({'channel': channel.id})
         archive_channel = self.bot.get_channel(int(doc['archive_channel']))
         permanent_message_ids = {int(mid) for mid in doc['permanent']}
 
@@ -132,39 +132,39 @@ class ArchivePins(commands.Cog):
                 file.fp.close()
             await message.unpin(reason='Archived.')
 
-    def archiving_is_on(self, channel_id: int) -> bool:
-        doc = self.collection.find_one({'channel': channel_id})
+    async def archiving_is_on(self, channel_id: int) -> bool:
+        doc = await self.collection.find_one({'channel': channel_id})
         return doc and doc['active']
 
-    def toggle_archiving(self, channel_id: int, archive_channel_id: int=0) -> bool: # returns True if turned on, False if turned off
-        doc = self.collection.find_one({'channel': channel_id})
+    async def toggle_archiving(self, channel_id: int, archive_channel_id: int=0) -> bool: # returns True if turned on, False if turned off
+        doc = await self.collection.find_one({'channel': channel_id})
         if doc:
             new_state = not doc['active']
-            self.collection.update_one(doc, {'$set': {'active': new_state, 'archive_channel': archive_channel_id}})
+            await self.collection.update_one(doc, {'$set': {'active': new_state, 'archive_channel': archive_channel_id}})
             return new_state
         else:
-            self.collection.insert_one({'channel': channel_id, 'active': True, 'permanent': [], 'archive_channel': archive_channel_id})
+            await self.collection.insert_one({'channel': channel_id, 'active': True, 'permanent': [], 'archive_channel': archive_channel_id})
             return True
 
-    def add_permanent_message(self, channel_id: int, message_id: int):
-        doc = self.collection.find_one({'channel': channel_id})
+    async def add_permanent_message(self, channel_id: int, message_id: int):
+        doc = await self.collection.find_one({'channel': channel_id})
         if not doc:
-            self.collection.insert_one({'channel': channel_id, 'active': False, 'permanent': [], 'archive_channel': 0})
+            await self.collection.insert_one({'channel': channel_id, 'active': False, 'permanent': [], 'archive_channel': 0})
 
-        self.collection.update_one({'channel': channel_id}, {'$push': {'permanent': message_id}})
+        await self.collection.update_one({'channel': channel_id}, {'$push': {'permanent': message_id}})
 
-    def remove_permanent_message(self, channel_id: int, message_id: int) -> bool: # True if exists, False if doesn't
-        doc = self.collection.find_one({'channel': channel_id})
+    async def remove_permanent_message(self, channel_id: int, message_id: int) -> bool: # True if exists, False if doesn't
+        doc = await self.collection.find_one({'channel': channel_id})
         if not doc:
             return False
 
         if message_id not in tuple(int(msg_id) for msg_id in doc['permanent']):
             return False
-        self.collection.update_one({'channel': channel_id}, {'$pull': {'permanent': message_id}})
+        await self.collection.update_one({'channel': channel_id}, {'$pull': {'permanent': message_id}})
         return True
 
-    def will_archive_message(self, channel_id: int, message_id: int) -> bool:
-        doc = self.collection.find_one({'channel': channel_id})
+    async def will_archive_message(self, channel_id: int, message_id: int) -> bool:
+        doc = await self.collection.find_one({'channel': channel_id})
         if not doc:
             return False
         

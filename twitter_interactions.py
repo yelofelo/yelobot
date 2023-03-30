@@ -51,12 +51,12 @@ class Twitter(commands.Cog):
         
         collection = self.MONGO_DB['TwitterSubs']
 
-        doc = collection.find_one({'channel': channel.id, 'twitter_user_id': data.id})
+        doc = await collection.find_one({'channel': channel.id, 'twitter_user_id': data.id})
         if doc:
             await reply(ctx, 'A subscription for this Twitter account already exists in that channel.')
             return
 
-        collection.insert_one({
+        await collection.insert_one({
             'server': ctx.guild.id, 'channel': channel.id, 'twitter_user_id': data.id, 'timeframe': int(time.time()), 'media_only': True if media_only else False})
 
         await reply(ctx, f'Subscribed to @{data.username} in {channel.mention}{" in media-only mode" if media_only else ""}.')
@@ -85,7 +85,7 @@ class Twitter(commands.Cog):
 
         collection = self.MONGO_DB['TwitterSubs']
         
-        if not collection.delete_one({'channel': channel.id, 'twitter_user_id': twitter_user.data.id}):
+        if not await collection.delete_one({'channel': channel.id, 'twitter_user_id': twitter_user.data.id}):
             await reply(f'{channel.mention} is not subscribed to @{username}.')
         else:
             await reply(ctx, f'Unsubscribed from @{username} in {channel.mention}.')
@@ -96,10 +96,10 @@ class Twitter(commands.Cog):
         while True:
             await asyncio.sleep(self.subscription_cooldown)
 
-            for doc in collection.find():
+            for doc in await (collection.find()).to_list(None):
                 channel = self.bot.get_channel(int(doc['channel']))
                 if channel is None:
-                    collection.delete_one(doc)
+                    await collection.delete_one(doc)
                     continue
 
                 dt = datetime.utcfromtimestamp(float(doc['timeframe']))
@@ -112,7 +112,7 @@ class Twitter(commands.Cog):
                     if isinstance(e, tweepy.BadRequest) or isinstance(e, tweepy.NotFound):
                         await channel.send(e, 'Could not access a Twitter subscription\'s profile (did their acount get suspended?). Deleting subscription.')
                         print(formatted_exception(e))
-                        collection.delete_one(doc)
+                        await collection.delete_one(doc)
                     elif isinstance(e, tweepy.TooManyRequests):
                         raise
                     continue
@@ -128,12 +128,12 @@ class Twitter(commands.Cog):
                     handle_request_exceptions(e, f'Could not load {twitter_username}\'s timeline. Deleting subscription.')
                     if isinstance(e, tweepy.BadRequest) or isinstance(e, tweepy.NotFound):
                         print(formatted_exception(e))
-                        collection.delete_one(doc)
+                        await collection.delete_one(doc)
                     elif isinstance(e, tweepy.TooManyRequests):
                         raise
                     continue
 
-                collection.update_one(doc, {'$set': {'timeframe': int(time.time())}})
+                await collection.update_one(doc, {'$set': {'timeframe': int(time.time())}})
 
                 if timeline.data is not None:
                     for tweet in reversed(timeline.data):

@@ -1,5 +1,5 @@
 from discord.ext import commands, tasks
-from pymongo.database import Database
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from yelobot_utils import reply, YeloBot
 import bible_api
 import traceback
@@ -8,7 +8,7 @@ import time
 
 
 class BibleVerse(commands.Cog):
-    def __init__(self, bot: YeloBot, mongo: Database, key):
+    def __init__(self, bot: YeloBot, mongo: AsyncIOMotorDatabase, key):
         self.bot = bot
         self.collection = mongo['BibleVerse']
         self.key = key
@@ -21,13 +21,13 @@ class BibleVerse(commands.Cog):
         Subscribe to or unsubscribe from daily bible verses in the current channel.
         +biblesub
         """
-        doc = self.collection.find_one({'type': 'channel', 'channel': ctx.channel.id})
+        doc = await self.collection.find_one({'type': 'channel', 'channel': ctx.channel.id})
         if not doc:
             doc = {'type': 'channel', 'channel': ctx.channel.id}
-            self.collection.insert_one(doc)
+            await self.collection.insert_one(doc)
             await reply(ctx, 'Subscribed to daily bible verses.')
         else:
-            self.collection.delete_one(doc)
+            await self.collection.delete_one(doc)
             await reply(ctx, 'Unsubscribed from daily bible verses.')
 
     async def send_verse(self):
@@ -35,7 +35,7 @@ class BibleVerse(commands.Cog):
         verse_msg = f'Daily bible verse:\n*{verse_ref}*\n{verse}'
 
         docs = self.collection.find({'type': 'channel'})
-        for doc in docs:
+        for doc in await docs.to_list(None):
             try:
                 channel = self.bot.get_channel(int(doc['channel']))
             except:
@@ -51,9 +51,9 @@ class BibleVerse(commands.Cog):
         now = time.time()
 
         if 0 <= now - unix_12 <= 2 * 60 * 60:
-            doc = self.collection.find_one({'type': 'last_verse_time'})
+            doc = await self.collection.find_one({'type': 'last_verse_time'})
             if now - int(doc['last_verse_time']) >= 20 * 60 * 60:
-                self.collection.update_one(doc, {'$set': {'last_verse_time': int(now)}})
+                await self.collection.update_one(doc, {'$set': {'last_verse_time': int(now)}})
                 await self.send_verse()
 
     @verse_loop.before_loop

@@ -1,6 +1,6 @@
 from discord.ext import commands
 from yelobot_utils import YeloBot, reply, Pagination, PaginationButton
-from pymongo.database import Database
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from datetime import timedelta, datetime
 
 import timezones
@@ -13,7 +13,7 @@ import time
 class DailyMessages(commands.Cog):
     RE = re.compile(r'^(?P<hour>\d(\d)?):(?P<minute>\d\d) ((?P<ampm>([Aa][Mm])|([Pp][Mm])) )?(?P<message>.+)$')
 
-    def __init__(self, bot: YeloBot, mongo_db: Database):
+    def __init__(self, bot: YeloBot, mongo_db: AsyncIOMotorDatabase):
         self.bot = bot
         self.MONGO_DB = mongo_db
 
@@ -64,7 +64,7 @@ class DailyMessages(commands.Cog):
         timezone = 'Etc/UTC'
 
         tz_collection = self.MONGO_DB['Timezones']
-        tz_doc = tz_collection.find_one({'user_id': ctx.author.id})
+        tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
 
         if tz_doc and tz_doc['is_set']:
             default_timezone = False
@@ -78,7 +78,7 @@ class DailyMessages(commands.Cog):
         minute %= 60
 
         daily_collection = self.MONGO_DB['DailyMessages']
-        daily_collection.insert_one({'server_id': ctx.guild.id, 'channel_id': ctx.channel.id, 'message': mo.group('message'), 'hour': hour, 'minute': minute})
+        await daily_collection.insert_one({'server_id': ctx.guild.id, 'channel_id': ctx.channel.id, 'message': mo.group('message'), 'hour': hour, 'minute': minute})
 
         to_reply = 'Daily message added.'
         if default_timezone:
@@ -98,7 +98,7 @@ class DailyMessages(commands.Cog):
 
         query = {'server_id': ctx.guild.id}
 
-        messages = list(collection.find(query))
+        messages = await (collection.find(query)).to_list(None)
         
         if not messages:
             await reply(ctx, 'This server has no daily messages set up.')
@@ -127,7 +127,7 @@ class DailyMessages(commands.Cog):
 
                 message_data['on_page'] = message_data['field_idx'] + 1
 
-                collection.delete_one(message)
+                await collection.delete_one(message)
                 
                 if message_data['max_page'] == 0:
                     message_data['additional_buttons'][0].disabled = True
@@ -172,7 +172,7 @@ class DailyMessages(commands.Cog):
 
         to_add = []
 
-        for doc in collection.find():
+        for doc in await (collection.find(None)).to_list(None):
             to_add.append(self.message_thread(int(doc['channel_id']), int(doc['hour']), int(doc['minute']), doc['message']))
 
         await asyncio.gather(*to_add)
