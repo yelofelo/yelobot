@@ -13,4 +13,4 @@ tweepy
 google-api-python-client
 openai
 setuptools>=65.5
-motor==3.1
+motor==3.1.*
