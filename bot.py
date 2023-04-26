@@ -58,7 +58,7 @@ from bible_verse import BibleVerse
 from daily_messages import DailyMessages
 import checks
 from help_command import HelpCommand
-from timestamps import Timestamps
+#from timestamps import Timestamps
 
 import yelobot_utils
 from yelobot_utils import search_for_user, reply, Pagination, formatted_exception, YeloBot
@@ -3149,7 +3149,7 @@ async def main():
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))
-    await bot.add_cog(Timestamps(bot, MONGO_DB))
+    #await bot.add_cog(Timestamps(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
         check_minecraft_events.start()
