@@ -58,6 +58,7 @@ from bible_verse import BibleVerse
 from daily_messages import DailyMessages
 import checks
 from help_command import HelpCommand
+from timestamps import Timestamps
 
 import yelobot_utils
 from yelobot_utils import search_for_user, reply, Pagination, formatted_exception, YeloBot
@@ -141,9 +142,18 @@ async def on_ready():
 
 @bot.command(name='syncglobal', hidden=True)
 @commands.check(checks.invoked_by_yelofelo)
-async def sync_global(ctx):
-    await bot.tree.sync()
+async def sync_global(ctx: commands.Context):
     await reply(ctx, 'Syncing commands globally.')
+    await bot.tree.sync()
+
+
+@bot.command(name='synclocal', hidden=True)
+@commands.check(checks.invoked_by_yelofelo)
+async def sync_local(ctx: commands.Context):
+    await reply(ctx, 'Syncing commands to only this server.')
+    bot.tree.clear_commands(guild=ctx.guild)
+    bot.tree.copy_global_to(ctx.guild)
+    await bot.tree.sync(guild=ctx.guild)
 
 
 @bot.event
@@ -2367,7 +2377,7 @@ async def current_time(ctx, *, location=None):
             if user is None:
                 await reply(ctx, 'Could not find the specified user.')
                 return
-            data = collection.find_one({'user_id': user.id})
+            data = await collection.find_one({'user_id': user.id})
             if not data or not data['is_set']:
                 await reply(ctx, 'This user has not used +settimezone.')
                 return
@@ -3139,6 +3149,7 @@ async def main():
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))
+    await bot.add_cog(Timestamps(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
         check_minecraft_events.start()
