@@ -137,7 +137,7 @@ class Twitter(commands.Cog):
 
                 if timeline.data is not None:
                     for tweet in reversed(timeline.data):
-                        if (not doc['media_only']) or tweet.attachments is not None:
+                        if (not doc['media_only']) or (tweet.attachments is not None and not (len(tweet.attachments) == 1 and 'poll_ids' in tweet.attachments)):
                             await channel.send(tweet_url_from_id(tweet.id, twitter_username))
 
     async def sub_to_tweets_startup(self):
