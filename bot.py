@@ -65,7 +65,6 @@ from yelobot_utils import search_for_user, reply, Pagination, formatted_exceptio
 
 load_dotenv()
 os.environ['TZ'] = 'Europe/London'  # Set the timezone to UTC
-IMG_DATA_KEY = os.getenv('IMG_DATA')
 
 _STEAM_API_KEY = os.getenv('STEAM_KEY')
 _STEAM_BASE_URL = 'https://api.steampowered.com/'
@@ -78,11 +77,12 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 WEATHER_KEY = os.getenv('WEATHER_KEY')
 MINECRAFT_IP = os.getenv('MINECRAFT_IP')
 RCON_PASSWORD = os.getenv('RCONPW')
-HEAVYNODE_KEY = os.getenv('HEAVYNODEAPI')
 TIMEZONEDB_KEY = os.getenv('TIMEZONE_KEY')
+MONGO_USER = os.getenv('MONGO_USER')
 MONGO_PASS = os.getenv('MONGO_PW')
+MONGO_CLUSTER = os.getenv('MONGO_CLUSTER')
+MONGO_DATABASE_NAME = os.getenv('MONGO_DATABASE')
 MINECRAFT_HOST = os.getenv('MINECRAFT_HOST')
-YT_API_KEY = os.getenv('YOUTUBE_KEY')
 BIBLE_API_KEY = os.getenv('BIBLE_API_KEY')
 
 MC_PORT = 25589
@@ -3135,9 +3135,10 @@ async def main():
     await bot.add_cog(remind_cog)
     StartupTask(remind_cog.init_reminders)
 
-    twitter_cog = Twitter(bot, MONGO_DB, os.getenv('TWITTER_BEARER'))
-    await bot.add_cog(twitter_cog)
-    StartupTask(twitter_cog.sub_to_tweets_startup)
+    # twitter_cog = Twitter(bot, MONGO_DB, os.getenv('TWITTER_BEARER'))
+    # await bot.add_cog(twitter_cog)
+    # StartupTask(twitter_cog.sub_to_tweets_startup)
+    # Twitter API is dead :(
 
     daily_message_cog = DailyMessages(bot, MONGO_DB)
     await bot.add_cog(daily_message_cog)
@@ -3167,10 +3168,10 @@ async def run():
     async with bot:
         async with aiohttp.ClientSession(loop=bot.loop) as sess:
             MONGO_DB = AsyncIOMotorClient(
-                f'mongodb+srv://yelofelo:{MONGO_PASS}@yelobot.exzzq.mongodb.net/YeloBot?retryWrites=true&w=majority',
+                f'mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}.exzzq.mongodb.net/{MONGO_DATABASE_NAME}?retryWrites=true&w=majority',
                 tlsCAFile=certifi.where(),
                 io_loop=bot.loop
-            ).YeloBot
+            )[MONGO_DATABASE_NAME]
             bot.set_aiohttp_sess(sess)
             await main()
 
