@@ -633,7 +633,7 @@ async def process_counting(message, number):
     else:
         await collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
 
-    if doc['grace_period'] == number:
+    if doc['grace_period'] != 1 and doc['grace_period'] == number:
         reaction = GRACE_PERIOD_END_REACTION
     elif 'custom_reactions' in doc and str(number) in doc['custom_reactions']:
         reaction = doc['custom_reactions'][str(number)]
@@ -694,7 +694,7 @@ COUNTING_PUNISHMENT_STRINGS = {
 async def punish_counting(message):
     collection = MONGO_DB['CountingPunishments']
     counting_collection = MONGO_DB['Counting']
-    doc = collection.find_one({'server': message.guild.id})
+    doc = await collection.find_one({'server': message.guild.id})
     if not doc:
         return
 
