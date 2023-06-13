@@ -170,7 +170,7 @@ async def on_message(message: discord.Message):
     
     if message.type == discord.MessageType.pins_add:
         archive_cog: ArchivePins = bot.get_cog('ArchivePins')
-        if len(await message.channel.pins()) == 50 and archive_cog.archiving_is_on(message.channel.id):
+        if len(await message.channel.pins()) == 50 and (await archive_cog.archiving_is_on(message.channel.id)):
             pin_arch_msg = await message.channel.send('We\'ve hit the pin limit. Archiving pins...')
             await archive_cog.commence_archive(message.channel)
             await reply(pin_arch_msg, 'Done.')

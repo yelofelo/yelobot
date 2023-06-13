@@ -134,6 +134,8 @@ class ArchivePins(commands.Cog):
 
     async def archiving_is_on(self, channel_id: int) -> bool:
         doc = await self.collection.find_one({'channel': channel_id})
+        print(type(doc))
+        print(doc)
         return doc and doc['active']
 
     async def toggle_archiving(self, channel_id: int, archive_channel_id: int=0) -> bool: # returns True if turned on, False if turned off
