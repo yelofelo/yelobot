@@ -307,7 +307,7 @@ async def on_member_remove(member):
     doc = await collection.find_one({'server': int(server)})
 
     if doc and doc['leave'] and doc['channel']:
-        await bot.get_channel(doc['channel']).send(doc['leave'].replace('%USER%', f'{member.name}#{member.discriminator}').replace('%SERVER%', member.guild.name))
+        await bot.get_channel(doc['channel']).send(doc['leave'].replace('%USER%', f'{member}').replace('%SERVER%', member.guild.name))
 
     await save_roles.save_roles(member, MONGO_DB)
 
@@ -356,7 +356,7 @@ async def add_join_message(ctx, *, message):
 @has_guild_permissions(manage_messages=True)
 async def add_leave_message(ctx, *, message):
     """Server Configuration
-    Update the message that appears when someone leaves. %USER% will be replaced with the user's name and discriminator,
+    Update the message that appears when someone leaves. %USER% will be replaced with their username,
     and %SERVER% will be replaced with the server name.
     +leavemessage <Message>
     """

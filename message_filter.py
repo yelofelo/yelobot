@@ -43,7 +43,7 @@ class MessageFilter(commands.Cog):
             log_channel = self.channel_logging_dict[int(message.guild.id)]
             if log_channel:
                 reason = f'used banned term: {mo.group(2)}'
-                await log_channel.send(f'**Message from {message.author.name}#{message.author.discriminator} in {message.channel.mention} deleted ({reason}).**\n\nORIGINAL MESSAGE:\n{message.content}')
+                await log_channel.send(f'**Message from {message.author} in {message.channel.mention} deleted ({reason}).**\n\nORIGINAL MESSAGE:\n{message.content}')
             return True
         return False
 
