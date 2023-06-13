@@ -13,14 +13,10 @@ To get the bot running, you will need to set a few environment variables. Instea
 
 # The Discord bot token.
 BOT_TOKEN=
-# Your MongoDB username
-MONGO_USER=
-# The name of your MongoDB project
-MONGO_PROJECT=
+# Your MongoDB connection string (https://www.mongodb.com/docs/guides/atlas/connection-string/)
+MONGO_CONNECTION=
 # The name of your MongoDB database
 MONGO_DATABASE=
-# Your MongoDB password
-MONGO_PW=
 
 ######### Optional #########
 # Some commands/features won't work without these,
