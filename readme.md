@@ -15,8 +15,8 @@ To get the bot running, you will need to set a few environment variables. Instea
 BOT_TOKEN=
 # Your MongoDB username
 MONGO_USER=
-# The name of your MongoDB cluster
-MONGO_CLUSTER=
+# The name of your MongoDB project
+MONGO_PROJECT=
 # The name of your MongoDB database
 MONGO_DATABASE=
 # Your MongoDB password

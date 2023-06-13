@@ -80,7 +80,7 @@ RCON_PASSWORD = os.getenv('RCONPW')
 TIMEZONEDB_KEY = os.getenv('TIMEZONE_KEY')
 MONGO_USER = os.getenv('MONGO_USER')
 MONGO_PASS = os.getenv('MONGO_PW')
-MONGO_CLUSTER = os.getenv('MONGO_CLUSTER')
+MONGO_PROJECT = os.getenv('MONGO_PROJECT')
 MONGO_DATABASE_NAME = os.getenv('MONGO_DATABASE')
 MINECRAFT_HOST = os.getenv('MINECRAFT_HOST')
 BIBLE_API_KEY = os.getenv('BIBLE_API_KEY')
@@ -3168,7 +3168,7 @@ async def run():
     async with bot:
         async with aiohttp.ClientSession(loop=bot.loop) as sess:
             MONGO_DB = AsyncIOMotorClient(
-                f'mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_CLUSTER}.exzzq.mongodb.net/{MONGO_DATABASE_NAME}?retryWrites=true&w=majority',
+                f'mongodb+srv://{MONGO_USER}:{MONGO_PASS}@{MONGO_PROJECT}.exzzq.mongodb.net/{MONGO_DATABASE_NAME}?retryWrites=true&w=majority',
                 tlsCAFile=certifi.where(),
                 io_loop=bot.loop
             )[MONGO_DATABASE_NAME]
