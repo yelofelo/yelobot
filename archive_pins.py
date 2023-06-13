@@ -125,7 +125,7 @@ class ArchivePins(commands.Cog):
             
         for message, files in to_unpin:
             await archive_channel.send(
-                f'{message.author.name}#{message.author.discriminator}, {discord_timestamp(time.mktime(message.created_at.timetuple()))}:\n{message.content}'.replace('@everyone', '@-everyone'),
+                f'{message.author}, {discord_timestamp(time.mktime(message.created_at.timetuple()))}:\n{message.content}'.replace('@everyone', '@-everyone'),
                 files=files
                 )
             for file in files:
