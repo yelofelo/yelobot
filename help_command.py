@@ -32,7 +32,7 @@ class HelpCommand(commands.Cog):
 
     @commands.command(name='help')
     async def help(self, ctx: commands.Context, *, help_target=None):
-        """Misc
+        """Utility
         Information about YeloBot's commands.
         +help
         """

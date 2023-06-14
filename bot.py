@@ -49,7 +49,6 @@ from startup_tasks import StartupTask
 from birthdays import Birthdays
 import save_roles
 from reminders import Reminders
-from twitter_interactions import Twitter
 import gpt_discord
 from openai_interface import OpenAIInterface
 from message_filter import MessageFilter
@@ -58,6 +57,7 @@ from bible_verse import BibleVerse
 from daily_messages import DailyMessages
 import checks
 from help_command import HelpCommand
+from currency_conversion import CurrencyConversion
 #from timestamps import Timestamps
 
 import yelobot_utils
@@ -82,6 +82,7 @@ MONGO_CONNECTION_STRING = os.getenv('MONGO_CONNECTION')
 MONGO_DATABASE_NAME = os.getenv('MONGO_DATABASE')
 MINECRAFT_HOST = os.getenv('MINECRAFT_HOST')
 BIBLE_API_KEY = os.getenv('BIBLE_API_KEY')
+EXCHANGE_RATE_KEY = os.getenv('EXCHANGE_RATE_KEY')
 
 MC_PORT = 25589
 RCON_PORT = 8088
@@ -1419,7 +1420,7 @@ async def init_tic_tac_toe_games():
 
 @bot.command(name='nowplaying', aliases=['np'])
 async def now_playing(ctx, s_member=None):
-    """Misc
+    """Utility
     Display the given user's Spotify playing status. Leave the User argument blank to display your own status.
     +nowplaying [User]
     """
@@ -1462,7 +1463,7 @@ async def now_playing(ctx, s_member=None):
 
 @bot.command(name='wikipedia', aliases=['wiki'])
 async def wikipedia_search(ctx, *, input_query):
-    """Misc
+    """Utility
     Search for a Wikipedia page. Warning: this API fucking sucks and is very buggy.
     +wikipedia <Query>
     """
@@ -1489,7 +1490,7 @@ async def wikipedia_search(ctx, *, input_query):
 
 @bot.command(name='youtube', aliases=['yt'])
 async def youtube_search(ctx, *, input_query):
-    """Misc
+    """Utility
     Search for a YouTube video.
     +youtube <Query>
     """
@@ -1650,7 +1651,7 @@ async def tell_minecraft(ctx, *, message):
 
 @bot.command(name='servericon')
 async def server_icon(ctx):
-    """Misc
+    """Utility
     Post the icon of the server.
     +servericon
     """
@@ -1679,7 +1680,7 @@ async def rank(ctx: commands.Context):
 
 @bot.command(name='worldrecord', aliases=['wr', 'record', 'besttime', 'speedrun'])
 async def srcwr(ctx, *, game_name=None):
-    """Misc
+    """Utility
     Get the world record of a game's default category speedrun on speedrun.com.
     This may or may not work super well.
     +worldrecord <Game>
@@ -2434,7 +2435,7 @@ async def current_time(ctx, *, location=None):
 
 @bot.command(name='weather')
 async def weather(ctx, *, city=None):
-    """Misc
+    """Utility
     Get the current weather of the specified location.
     +weather <Location>
     """
@@ -2496,7 +2497,7 @@ async def weather(ctx, *, city=None):
 
 @bot.command(name='avatar', aliases=['pfp', 'avi', 'av'])
 async def avatar(ctx, *, person=None):
-    """Misc
+    """Utility
     Get a user's current avatar. This will default to the user's server avatar. Use +globalavatar if that's
     not what you want.
     +avatar <User>
@@ -2525,7 +2526,7 @@ async def avatar(ctx, *, person=None):
 
 @bot.command(name='globalavatar', aliases=['globalpfp', 'globalavi', 'globalav', 'gavatar', 'gpfp', 'gavi', 'gav'])
 async def global_avatar(ctx, *, person=None):
-    """Misc
+    """Utility
     Get a user's global avatar. If this user has a server avatar set, this command will ignore it.
     +globalavatar <User>
     """
@@ -2634,7 +2635,7 @@ async def perky(ctx):
 
 @bot.command(name='pick1', aliases=['pick', 'pickone', 'p1'])
 async def pick_one(ctx, *args):
-    """Misc
+    """Utility
     Pick one of the arguments. If your arguments have spaces, you must put the arguments in quotes.
     +pick1 "<Arg1>" "<Arg2>" ...
     """
@@ -2648,7 +2649,7 @@ async def pick_one(ctx, *args):
 
 @bot.command(name='pickn', aliases=['pickseveral', 'pickmultiple'])
 async def pick_n(ctx, n=None, *args):
-    """Misc
+    """Utility
     Pick several arguments. If your arguments have spaces, you must put the arguments in quotes.
     +pickn <Count> "<Arg1>" "<Arg2>" ...
     """
@@ -2682,7 +2683,7 @@ async def pick_n(ctx, n=None, *args):
 
 @bot.command(name='roll')
 async def roll(ctx, die='d6'):
-    """Misc
+    """Utility
     Roll dice.
     +roll [[Number of Dice]d<Sides on Each Die>]
     """
@@ -2999,7 +3000,7 @@ async def shibe(ctx):
 
 @bot.command(name='emote', aliases=['e'])
 async def emote(ctx, emote):
-    """Misc
+    """Utility
     Post an emote. This is helpful if you don't have Nitro but want to post an animated emote.
     +emote <Name>
     """
@@ -3142,9 +3143,11 @@ async def main():
     await bot.add_cog(daily_message_cog)
     StartupTask(daily_message_cog.init_daily_messages)
 
-    filter_cog = MessageFilter(bot, MONGO_DB)
-    await bot.add_cog(filter_cog)
+    convert_currency_cog = CurrencyConversion(bot, MONGO_DB, EXCHANGE_RATE_KEY)
+    await bot.add_cog(convert_currency_cog)
+    StartupTask(convert_currency_cog.update_currencies)
 
+    await bot.add_cog(MessageFilter(bot, MONGO_DB))
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))

@@ -30,6 +30,8 @@ WEATHER_KEY=
 TIMEZONE_KEY=
 # Scripture bible API key (required for daily bible verses) from here https://scripture.api.bible/
 BIBLE_API_KEY=
+# exchangeratesapi.io key (for +convertcurrency)
+EXCHANGE_RATE_KEY=
 
 ######### Rarely Needed #########
 # These are used by YeloBot's live deployment, but for
