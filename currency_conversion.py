@@ -60,7 +60,7 @@ class CurrencyConversion(commands.Cog):
         
         converted_amount = self.convert_currencies(numeric_amt, original_currency, new_currency, rates)
 
-        await reply(ctx, f'**{numeric_amt:.2f} {original_currency}** is equal to {converted_amount:.2f} {new_currency}**.')
+        await reply(ctx, f'**{numeric_amt:.2f} {original_currency}** is equal to **{converted_amount:.2f} {new_currency}**.')
 
     def convert_currencies(self, amount: int | float, original_currency: str, new_currency: str, rates: dict[str, float]) -> int | float:
         if original_currency == self.BASE_CURRENCY:
