@@ -75,7 +75,7 @@ class MessageFilter(commands.Cog):
         +unfilter <Term>
         """
         if term is None:
-            await reply(ctx, f'+filterword <term>')
+            await reply(ctx, f'+unfilter <term>')
             return
         term = term.lower()
         await self.add_server_if_doesnt_exist(ctx.guild.id)
