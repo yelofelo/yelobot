@@ -89,13 +89,18 @@ class Birthdays(commands.Cog):
     @commands.command(name='setbirthday', aliases=['addbirthday'])
     async def set_birthday(self, ctx, *, date=None):
         """Birthdays
-        Set your birthday. Use mm/dd for the date (or dd/mm if set using +dateformat).
-        +setbirthday <Date>
+        Set your birthday. Use mm/dd for the date (or dd/mm if set using +dateformat). Leave the date blank to remove your birthday.
+        +setbirthday [Date]
         """
         usage = '+setbirthday <MM/DD (or DD/MM if set using +dateformat)>'
 
         if not date:
-            await reply(ctx, usage)
+            tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
+            if not tz_doc:
+                await reply(ctx, usage)
+            else:
+                await tz_collection.delete_one(tz_doc)
+                await reply(ctx, 'Your birthday was removed.')
             return
 
         mo = re.match(self.DATE_RE, date)
