@@ -98,7 +98,7 @@ class Birthdays(commands.Cog):
         if not date:
             doc = await collection.find_one({'server': ctx.guild.id})
             if str(ctx.author.id) in doc['users']:
-                await collection.unset({f'users.{ctx.author.id}': ''})
+                await collection.update_one(doc, {'$unset': {f'users.{ctx.author.id}': ''}})
                 await reply(ctx, 'Your birthday was removed.')
                 return
             tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
