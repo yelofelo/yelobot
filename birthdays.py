@@ -93,14 +93,16 @@ class Birthdays(commands.Cog):
         +setbirthday [Date]
         """
         usage = '+setbirthday <MM/DD (or DD/MM if set using +dateformat)>'
+        collection = self.MONGO_DB['Birthdays']
 
         if not date:
-            tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
-            if not tz_doc:
-                await reply(ctx, usage)
-            else:
-                await tz_collection.delete_one(tz_doc)
+            doc = await collection.find_one({'server': ctx.guild.id})
+            if str(ctx.author.id) in doc['users']:
+                await collection.unset({f'users.{ctx.author.id}': ''})
                 await reply(ctx, 'Your birthday was removed.')
+                return
+            tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
+            await reply(ctx, usage)
             return
 
         mo = re.match(self.DATE_RE, date)
@@ -116,7 +118,6 @@ class Birthdays(commands.Cog):
         else:
             ddmmyy = False
         
-        collection = self.MONGO_DB['Birthdays']
         doc = await collection.find_one({'server': ctx.guild.id})
 
         if not doc:
