@@ -25,6 +25,8 @@ import emoji
 import io
 import certifi
 import aiohttp
+from fuzzywuzzy import fuzz
+from typing import Iterable
 
 import urllib.request
 import urllib.parse
@@ -2032,7 +2034,7 @@ async def speak(ctx):
 
 @bot.command(name='map', hidden=True)
 @commands.check(checks.invoked_in_club_cheadle)
-async def map(ctx):
+async def map_cmd(ctx):
     if ctx.message.guild.id != LWOLF_SERVER_ID:
         return
     await reply(ctx, 'use "+i map" instead')
@@ -2095,8 +2097,8 @@ async def image(ctx, *, tag=None):
     else:
         image = images.get(tag)
     
-    if image is None:
-        await reply(ctx, 'Image not found.')
+    if image is None: # TODO: this part will be replaced with the fuzzy matching subroutine
+        await fuzzy_img_match(ctx, tag, images.keys())
         return
     
     if isinstance(image, str):
@@ -2125,6 +2127,21 @@ async def image(ctx, *, tag=None):
 
     await reply(ctx, text, file=discord.File(binary_data, filename=filename))
     binary_data.close()
+
+FUZZ_TAG_MATCH_MIN_RATIO = 60
+
+async def fuzzy_img_match(ctx: commands.Context, tag_entered: str, tags: Iterable[str]):
+    def get_word_and_fuzz_ratio(to_match_against: str) -> tuple[str, int]:
+        match_ratio = fuzz.ratio(tag_entered, to_match_against)
+        return to_match_against, match_ratio
+    
+    best_match, best_match_ratio = max(map(get_word_and_fuzz_ratio, tags), key=lambda tag_and_match: tag_and_match[1])
+    # sorry for the functional programming BS here but it's pretty neat and compact :D
+
+    if best_match_ratio < FUZZ_TAG_MATCH_MIN_RATIO:
+        await reply(ctx, f'Image not found.')
+    else:
+        await reply(ctx, f'Image not found. Did you mean {best_match}?')
 
 
 @bot.command(name='imagecount')

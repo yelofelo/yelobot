@@ -83,8 +83,8 @@ class CurrencyConversion(commands.Cog):
             time_remaining = (last_updated + self.CURRENCY_RECACHE_INTERVAL) - time.time()
 
             if time_remaining <= 0:
-                new_rates = self.fetch_exchange_rates()
-                await self.collection.update_one(doc, {'rates': new_rates, 'last_updated': time.time()})
+                new_rates = await self.fetch_exchange_rates()
+                await self.collection.update_one(doc, {'$set': {'rates': new_rates, 'last_updated': time.time()}})
                 await asyncio.sleep(self.CURRENCY_RECACHE_INTERVAL)
             else:
                 await asyncio.sleep(time_remaining)
