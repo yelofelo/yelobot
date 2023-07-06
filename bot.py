@@ -2132,7 +2132,7 @@ FUZZ_TAG_MATCH_MIN_RATIO = 60
 
 async def fuzzy_img_match(ctx: commands.Context, tag_entered: str, tags: Iterable[str]):
     def get_word_and_fuzz_ratio(to_match_against: str) -> tuple[str, int]:
-        match_ratio = fuzz.ratio(tag_entered, to_match_against)
+        match_ratio = fuzz.ratio(tag_entered.lower(), to_match_against.lower())
         return to_match_against, match_ratio
     
     best_match, best_match_ratio = max(map(get_word_and_fuzz_ratio, tags), key=lambda tag_and_match: tag_and_match[1])
