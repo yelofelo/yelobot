@@ -2141,7 +2141,7 @@ async def fuzzy_img_match(ctx: commands.Context, tag_entered: str, tags: Iterabl
     if best_match_ratio < FUZZ_TAG_MATCH_MIN_RATIO:
         await reply(ctx, f'Image not found.')
     else:
-        await reply(ctx, f'Image not found. Did you mean {best_match}?')
+        await reply(ctx, f'Image not found. Did you mean `{best_match}`?')
 
 
 @bot.command(name='imagecount')
