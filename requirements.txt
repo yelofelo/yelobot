@@ -15,4 +15,4 @@ openai
 setuptools>=65.5
 motor==3.1.*
 fuzzywuzzy==0.18.*
-python-Levenshtein==0.21.x
+python-Levenshtein==0.21.*
