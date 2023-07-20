@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from mcstatus import JavaServer
 from mcrcon import MCRcon
 import socket
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, element
 from motor.motor_asyncio import AsyncIOMotorClient
 import emoji
 import io
@@ -1829,10 +1829,23 @@ async def steam_price(ctx, *, game):
         if not result_list[i]['href'].startswith('https://store.steampowered.com/app/'):
             i += 1
             continue
-        if result_list[i].find_all('span', {'class': 'platform_img music'}):
+        if result_list[i].find('span', {'class': 'platform_img music'}):
             i += 1
             continue
-        if result_list[i].find('div', {'class': 'search_price'}).text.strip() == '':
+
+        search_price_results = result_list[i].find('div', {'class': 'search_price'})
+
+        if search_price_results is not None and search_price_results.text.strip() == '':
+            i += 1
+            continue
+
+        search_price_discount_combined_results = result_list[i].find('div', {'class': 'search_price_discount_combined'})
+
+        if search_price_discount_combined_results is not None and search_price_discount_combined_results.text.strip() == '':
+            i += 1
+            continue
+
+        if search_price_results is None and search_price_discount_combined_results is None:
             i += 1
             continue
 

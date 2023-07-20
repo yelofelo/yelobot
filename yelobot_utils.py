@@ -137,7 +137,7 @@ class Pagination:
         description = ''
 
         if len(fields) == 0:
-            reply(ctx, 'No results.')
+            await reply(ctx, 'No results.')
             return
         
         if read_data_async_fn is not None:
