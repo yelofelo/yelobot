@@ -15,7 +15,7 @@ class OpenAIInterface:
             max_tokens=max_tokens,
             stop=stop,
             temperature=temperature
-        ).choices[0].message.strip()
+        ).choices[0].message['content'].strip()
 
 if __name__ == '__main__':
     import os

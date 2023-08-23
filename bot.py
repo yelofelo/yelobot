@@ -228,7 +228,7 @@ async def on_message(message: discord.Message):
             async with RESPONSE_LOCK:
                 RESPONSE_IDLE_STATUSES.append(new_status)
             if await gpt_discord.send_if_idle(bot, RESPONSE_TIME_TO_WAIT, message.channel, new_status, OPENAI_INTERFACE, RESPONSE_LOCK):
-                RESPONSE_TIME_TO_WAIT = random.randrange(20 * 60, 1.5 * 60 * 60)
+                RESPONSE_TIME_TO_WAIT = random.randrange(20 * 60, int(1.5 * 60 * 60))
                 RESPONSE_MESSAGE_GOAL = random.randint(50, 200)
                 RESPONSE_MESSAGE_COUNTER = 0
 
