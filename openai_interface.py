@@ -1,21 +1,21 @@
 import openai
 import dotenv
 
-MODEL = 'babbage:ft-personal:yelobot-babbage-apr22-curated-2022-05-30-05-33-57'
+MODEL = 'ft:gpt-3.5-turbo-0613:personal::7qZhaoF6'
 
 class OpenAIInterface:
     def __init__(self, api_key, model=MODEL):
         openai.api_key = api_key
         self.model = model
 
-    def generate(self, prompt, stop='\n\n', max_tokens=150, temperature=0.55):
-        return openai.Completion.create(
+    def generate(self, prompt, system_message, stop='\n\n', max_tokens=150, temperature=0.9):
+        return openai.ChatCompletion.create(
             model=self.model,
-            prompt=prompt,
+            messages=[{'role': 'system', 'content': system_message}, {'role': 'user', 'content': prompt}],
             max_tokens=max_tokens,
             stop=stop,
             temperature=temperature
-        )['choices'][0]['text'].strip()
+        ).choices[0].message.strip()
 
 if __name__ == '__main__':
     import os

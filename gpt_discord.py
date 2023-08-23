@@ -4,8 +4,14 @@ import asyncio
 import discord
 import time
 
+from openai_interface import OpenAIInterface
 
-async def respond_to(bot, message_or_channel, openai_interface) -> None:
+
+# TODO: refactor, put this elsewhere
+SYSTEM_MESSAGE = "YeloBot is not an assistant, but a chatbot who tries to fit in with the other members of the chat."
+
+
+async def respond_to(bot, message_or_channel, openai_interface: OpenAIInterface) -> None:
     if isinstance(message_or_channel, discord.TextChannel):
         channel = message_or_channel
     else:
@@ -30,7 +36,7 @@ async def respond_to(bot, message_or_channel, openai_interface) -> None:
         # first_line = False
 
 
-async def generate_gpt_3(bot, messages, openai_interface) -> str:
+async def generate_gpt_3(bot, messages, openai_interface: OpenAIInterface) -> str:
     global GPT_SESS
 
     prefix = ''
@@ -48,7 +54,7 @@ async def generate_gpt_3(bot, messages, openai_interface) -> str:
             prefix += '\n' + message.author.name + ':\n'
             last_author = message.author.id
 
-        prefix += emoji.demojize(message.content.replace(mention, 'yelobot').replace(mobilemention, 'yelobot').replace('@', ''), language='alias') + '\n'
+        prefix += emoji.demojize(message.content.replace(mention, 'yelobot').replace(mobilemention, 'yelobot').replace('@', '').replace('\n\n', '\n'), language='alias') + '\n'
 
     prefix = reverse_replace_emote(prefix.lstrip('\n')) + f'\nYeloBot:\n'
 
@@ -67,7 +73,7 @@ async def generate_gpt_3(bot, messages, openai_interface) -> str:
 
     # print(prefix)
 
-    output = openai_interface.generate(prefix)
+    output = openai_interface.generate(prefix, SYSTEM_MESSAGE)
 
     return emoji.demojize(replace_with_emote(bot, output))
 
