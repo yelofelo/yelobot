@@ -8,7 +8,7 @@ class OpenAIInterface:
         openai.api_key = api_key
         self.model = model
 
-    def generate(self, prompt, system_message, stop='\n\n', max_tokens=150, temperature=0.9):
+    def generate(self, prompt, system_message, stop='\n\n', max_tokens=150, temperature=0.75):
         return openai.ChatCompletion.create(
             model=self.model,
             messages=[{'role': 'system', 'content': system_message}, {'role': 'user', 'content': prompt}],
