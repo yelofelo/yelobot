@@ -1599,6 +1599,8 @@ async def check_minecraft_events():
         current_players_set.add(player)
 
     for player in MC_PLAYERS_SET:
+        if str(player) == 'Anonymous Player':
+            continue
         if player not in current_players_set:
             await CHANNEL_FOR_MC_PLAYERS.send(f'`{player}` left the Minecraft server.')
 
