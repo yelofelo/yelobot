@@ -2867,6 +2867,8 @@ async def am_i_buca(ctx):
     """
     if ctx.author.id == 145655981076905985: # buca user id, probably should be in a constant but lol
         await reply(ctx, 'yeah')
+    elif ctx.author.id == 305176315470807041: # twoca
+        await reply(ctx, 'kinda')
     else:
         await reply(ctx, 'no')
 
