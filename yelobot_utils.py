@@ -23,9 +23,9 @@ class YeloBot(commands.Bot):
         self.mongo_db = mongo_db
 
     async def invoke(self, ctx: commands.Context) -> None:
+        await (super().invoke(ctx))
         if self.mongo_db is not None and ctx.command is not None:
             await self.log_command_usage(ctx.command)
-        await (super().invoke(ctx))
 
     async def log_command_usage(self, command: commands.Command) -> None:
         collection = self.mongo_db['UsageStatistics']
