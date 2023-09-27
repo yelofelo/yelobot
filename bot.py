@@ -3210,6 +3210,7 @@ async def run():
                 io_loop=bot.loop
             )[MONGO_DATABASE_NAME]
             bot.set_aiohttp_sess(sess)
+            bot.set_mongo_db(MONGO_DB)
             await main()
 
 if __name__ == '__main__':

@@ -13,10 +13,27 @@ MIME_MEDIA_RE = re.compile(r'^((image)|(video)|(audio))/.+$')
 class YeloBot(commands.Bot):
     def __init__(self, *args, **kargs):
         self.aiohttp_sess: aiohttp.ClientSession = None
+        self.mongo_db = None
         super().__init__(*args, **kargs)
     
     def set_aiohttp_sess(self, sess: aiohttp.ClientSession):
         self.aiohttp_sess = sess
+
+    def set_mongo_db(self, mongo_db) -> None:
+        self.mongo_db = mongo_db
+
+    async def invoke(self, ctx: commands.Context) -> None:
+        if self.mongo_db is not None and ctx.command is not None:
+            await self.log_command_usage(ctx.command)
+        await (super().invoke(ctx))
+
+    async def log_command_usage(self, command: commands.Command) -> None:
+        collection = self.mongo_db['UsageStatistics']
+        doc = await collection.find_one({'command': command.name})
+        if not doc:
+            await collection.insert_one({'command': command.name, 'uses': 1})
+        else:
+            await collection.update_one({'command': command.name}, {'$inc': {'uses': 1}})
 
 def get(iterable, **kargs):
     """An alternate implementation of discord.utils.get"""
@@ -32,7 +49,7 @@ def get_all(iterable, **kargs):
 async def reply(messagable: discord.abc.Messageable, message=None, **kargs):
     await messagable.reply(message, mention_author=False, **kargs)
 
-def search_for_user(ctx, name_given):
+def search_for_user(ctx: commands.Context, name_given: str):
     name_given = name_given.rstrip('>').lstrip('<@').lstrip('<@!')
 
     for user in ctx.guild.members:
