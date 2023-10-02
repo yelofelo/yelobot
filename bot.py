@@ -2639,7 +2639,9 @@ async def third_funny(ctx):
         188664746118086656: 'https://cdn.discordapp.com/attachments/230963738574848000/764803738321551400/'
                             '20201011_185531.jpg',
         # james
-        191428415755255809: 'https://cdn.discordapp.com/attachments/235949492992475137/929495840928694372/erb_walter.mp4'
+        191428415755255809: 'https://cdn.discordapp.com/attachments/235949492992475137/929495840928694372/erb_walter.mp4',
+        # high
+        171105319018037249: 'https://cdn.discordapp.com/attachments/230969392710549504/1158180282575356035/image.png'
     }
 
     if ctx.author.id in funny3_users.keys():
