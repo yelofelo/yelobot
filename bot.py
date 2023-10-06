@@ -792,6 +792,33 @@ async def remove_counting_punishments(ctx):
     await reply(ctx, 'Removed all counting punishments.')
 
 
+@bot.command(name='setnextnumber')
+@has_guild_permissions(manage_messages=True)
+async def set_next_number_for_counting(ctx: commands.Context, number):
+    """Counting
+    Sets the next number for counting.
+    +setnextnumber <number>
+    """
+    collection = MONGO_DB['Counting']
+    doc = await collection.find_one({'server': ctx.guild.id})
+
+    if not doc:
+        await reply(ctx, 'Counting has not been set up in this server.')
+        return
+    
+    try:
+        number = int(number)
+    except:
+        await reply(ctx, 'Please enter a valid number.')
+        return
+
+    await collection.update_one({'server': ctx.guild.id}, {'$set': {'count': number - 1}})
+    await collection.update_one({'server': ctx.guild.id}, {'$set': {'last_user': 0}})
+    await collection.update_one({'server': ctx.guild.id}, {'$set': {'last_message': 0}})
+    
+    await reply(ctx, 'Updated next number.')
+
+
 @bot.command(name='countingstandings')
 async def counting_standings(ctx):
     """Counting
