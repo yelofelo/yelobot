@@ -59,6 +59,7 @@ from bible_verse import BibleVerse
 from daily_messages import DailyMessages
 import checks
 from help_command import HelpCommand
+import help_command
 from currency_conversion import CurrencyConversion
 #from timestamps import Timestamps
 
@@ -156,6 +157,24 @@ async def sync_local(ctx: commands.Context):
     bot.tree.copy_global_to(ctx.guild)
     await bot.tree.sync(guild=ctx.guild)
 
+
+@bot.command(name='invocationdata', hidden=True)
+@commands.check(checks.invoked_by_yelofelo)
+async def get_invocation_data(ctx: commands.Context):
+    collection = MONGO_DB['UsageStatistics']
+
+    output = ''
+
+    for command in bot.commands:
+        if command.hidden:
+            continue
+        doc = await collection.find_one({'command': command.name})
+        if not doc:
+            continue
+        category = help_command.get_category_from_command(command)
+        output += f'{command.name},{category},{doc["uses"]}\n'
+
+    await reply(ctx, f'```\n{output}```')
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -3092,7 +3111,7 @@ async def albinauric(ctx):
             await ctx.message.reference.cached_message.add_reaction(e)
         except CommandError:
             return
-
+        
 # old thing for funny3 i think? i had no idea what i was doing
 def get_random_shibe():
     return random.choice(['https://i.imgur.com/H6p2hxT.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/468'
