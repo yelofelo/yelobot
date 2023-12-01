@@ -2469,6 +2469,17 @@ async def current_time(ctx, *, location=None):
 
         display = user.nick if user.nick else user.name
     else:
+        # fixing vietnam more
+        split_location = location.lower().split(' ')
+
+        for i, location_fragment in enumerate(split_location):
+            if location_fragment == 'saigon':
+                split_location[i] = 'ho chi minh city'
+            elif location_fragment == 'saigon,':
+                split_location[i] = 'ho chi minh city,'
+
+        location = ' '.join(split_location)
+
         try:
             nominatim_response = nominatim.query(location)
         except nominatim.NominatimStatusCodeError as e:
