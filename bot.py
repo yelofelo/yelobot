@@ -2160,7 +2160,7 @@ async def image(ctx, *, tag=None):
     else:
         image = images.get(tag)
     
-    if image is None: # TODO: this part will be replaced with the fuzzy matching subroutine
+    if image is None:
         await fuzzy_img_match(ctx, tag, images.keys())
         return
     
@@ -2237,6 +2237,8 @@ async def add_image(ctx, tag=None, url=None):
 
     if len(ctx.message.attachments) > 0:
         url = ctx.message.attachments[0].url
+        if '?' in url:
+            url = url[:url.index('?')]
     if url is None or tag is None:
         await reply(ctx, 'You must specify a tag and an image.')
         return
