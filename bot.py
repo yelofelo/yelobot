@@ -2171,25 +2171,29 @@ async def image(ctx, *, tag=None):
         image_url = image['url']
         image_author = int(image['author'])
 
-    async with bot.aiohttp_sess.get(image_url) as image_response:
-        if image_response.status != 200:
-            await reply(ctx, f'This image seems to be broken (tag: {tag_name}, url: {image_url})')
-            return
-        
-        filename_match = re.match(r'^.+/(.+)$', image_url)
-        if filename_match:
-            filename = filename_match.group(1)
-        else:
-            filename = 'unknown_image'
+    # Downloading images directly from the URL isn't so simple anymore. See here (from the Discord Developers server):
+    # https://discord.com/channels/613425648685547541/697138785317814292/1157372186160537750
 
-        binary_data = io.BytesIO(await image_response.content.read())
+    # async with bot.aiohttp_sess.get(image_url) as image_response:
+    #     if image_response.status != 200:
+    #         await reply(ctx, f'This image seems to be broken (tag: {tag_name}, url: {image_url})')
+    #         return
+        
+    #     filename_match = re.match(r'^.+/(.+)$', image_url)
+    #     if filename_match:
+    #         filename = filename_match.group(1)
+    #     else:
+    #         filename = 'unknown_image'
+
+    #     binary_data = io.BytesIO(await image_response.content.read())
 
     if image_author and text:
         author_member = bot.get_user(image_author)
         text += f' (added by {author_member})'
 
-    await reply(ctx, text, file=discord.File(binary_data, filename=filename))
-    binary_data.close()
+    await reply(ctx, f'{text}\n{image_url}')
+    # await reply(ctx, text, file=discord.File(binary_data, filename=filename))
+    # binary_data.close()
 
 FUZZ_TAG_MATCH_MIN_RATIO = 60
 
