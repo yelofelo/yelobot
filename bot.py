@@ -117,6 +117,7 @@ StartupTask.set_bot(bot)
 lastmessages = LastMessages()
 
 PLAYING_STATUS = 'Mario Remastered'
+USER_AGENT = 'YeloBot/1.0'
 
 
 RESPONSE_TIME_TO_WAIT = random.randrange(20 * 60, int(1.5 * 60 * 60))
@@ -1043,7 +1044,7 @@ async def set_timezone(ctx, *, tz=None):
     if tz is None:
         await ctx.send('+settimezone <location>')
     try:
-        nm_response = nominatim.query(tz)
+        nm_response = nominatim.query(tz, USER_AGENT)
     except nominatim.NominatimStatusCodeError as e:
         await ctx.send(formatted_exception(e))
         return
@@ -2487,7 +2488,7 @@ async def current_time(ctx, *, location=None):
         location = ' '.join(split_location)
 
         try:
-            nominatim_response = nominatim.query(location)
+            nominatim_response = nominatim.query(location, USER_AGENT)
         except nominatim.NominatimStatusCodeError as e:
             await reply(ctx, formatted_exception(e))
             return

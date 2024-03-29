@@ -7,14 +7,15 @@ class NominatimStatusCodeError(Exception):
     pass
 
 
-def query(query_str, format='json', language='en-US'):
+def query(query_str, user_agent, format='json', language='en-US'):
     params = {
         'q': query_str,
         'format': format
         }
 
     headers = {
-        'Accept-Language': language
+        'Accept-Language': language,
+        'User-Agent': user_agent
     }
 
     response = requests.get(BASE_URL, params=params, headers=headers)
