@@ -2,7 +2,7 @@ discord.py==2.3.*
 requests
 wikipedia
 python-dotenv
-mcstatus
+mcstatus>=11.1.1
 beautifulsoup4
 dnspython
 emoji
