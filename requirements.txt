@@ -16,3 +16,4 @@ setuptools>=65.5
 motor==3.1.*
 fuzzywuzzy==0.18.*
 python-Levenshtein==0.21.*
+python-dateutil==2.9.0.*

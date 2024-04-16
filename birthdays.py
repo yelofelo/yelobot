@@ -6,7 +6,13 @@ import re
 import asyncio
 import timezones
 import time
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from yelobot_utils import reply, search_for_user, Pagination, YeloBot
+
+
+JOHN_USER_ID = 147908091768340480
+
 
 class Birthdays(commands.Cog):
     DEFAULT_TZ = 'Etc/GMT'
@@ -84,15 +90,42 @@ class Birthdays(commands.Cog):
 
         await reply(ctx, 'Birthday message updated successfully.')
 
-    DATE_RE = re.compile(r'^(\d?\d)[-\/\.](\d?\d)(?:[-\/\.](?:(?:\d\d)?\d\d))?$')
+    @has_permissions(manage_messages=True)
+    @commands.command(name='birthdaymessageage')
+    async def birthday_message_with_age(self, ctx, *, message=None):
+        """Birthdays
+        Set the message that is sent when a user's birthday comes. %USER% will be replaced with the user's @ and %AGE% will be replaced with the user's age.
+        +birthdaymessage <Message>
+        """
+        usage = '+birthdaymessage <message> (use %USER% to mention the user in the message and %AGE% to display their age)'
+
+        if not message:
+            await reply(ctx, usage)
+            return
+        
+        if '%AGE%' not in message:
+            await reply(ctx, f'Please include %AGE% in the message.\n{usage}')
+            return
+        
+        collection = self.MONGO_DB['Birthdays']
+        doc = await collection.find_one({'server': ctx.guild.id})
+
+        if not doc:
+            await collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message_with_age': message, 'users': {}})
+        else:
+            await collection.update_one({'server': ctx.guild.id}, {'$set': {'message_with_age': message}})
+
+        await reply(ctx, 'Birthday message with age updated successfully.')
+
+    DATE_RE = re.compile(r'^(\d?\d)[-\/\.](\d?\d)(?:[-\/\.]((?:\d\d)?\d\d))?$')
 
     @commands.command(name='setbirthday', aliases=['addbirthday'])
     async def set_birthday(self, ctx, *, date=None):
         """Birthdays
-        Set your birthday. Use mm/dd for the date (or dd/mm if set using +dateformat). Leave the date blank to remove your birthday.
+        Set your birthday. Use mm/dd[/yyyy] for the date (or dd/mm[/yyyy] if set using +dateformat). Leave the date blank to remove your birthday.
         +setbirthday [Date]
         """
-        usage = '+setbirthday <MM/DD (or DD/MM if set using +dateformat)>'
+        usage = '+setbirthday <MM/DD[/YYYY] (or DD/MM[/YYYY] if set using +dateformat)>'
         collection = self.MONGO_DB['Birthdays']
 
         if not date:
@@ -101,7 +134,6 @@ class Birthdays(commands.Cog):
                 await collection.update_one(doc, {'$unset': {f'users.{ctx.author.id}': ''}})
                 await reply(ctx, 'Your birthday was removed.')
                 return
-            tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
             await reply(ctx, usage)
             return
 
@@ -109,6 +141,16 @@ class Birthdays(commands.Cog):
         if not mo:
             await reply(ctx, usage)
             return
+        
+        has_year = bool(mo.group(3))
+        
+        if has_year and len(mo.group(3)) != 4:
+            await reply(ctx, f'If you specify a year, it must be 4 digits.\n{usage}')
+            return
+        
+        year = None
+        if has_year:
+            year = int(mo.group(3))
 
         tz_collection = self.MONGO_DB['Timezones']
         tz_doc = await tz_collection.find_one({'user_id': ctx.author.id})
@@ -136,13 +178,25 @@ class Birthdays(commands.Cog):
         if not valid_date(month, day):
             await reply(ctx, 'This date is invalid. Make sure you have set the correct date format using +dateformat.')
             return
+        
+        now = datetime.now()
+        if has_year:
+            age = get_age(day, month, year, day, month, now.year)
 
+            if ctx.author.id == JOHN_USER_ID and year <= 1990:
+                await reply(ctx, 'I knew you would try this shit, John.')
+                return
+            
+            if age > 80 or age < 12:
+                await reply(ctx, 'hahhahha i am laughign,          g')
+                return
+        
         if user_doc:
-            await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}.month': month, f'users.{ctx.author.id}.day': day, f'users.{ctx.author.id}.is_birthday': False}})
+            await collection.update_one({'server': ctx.guild.id}, {'$set': 
+                {f'users.{ctx.author.id}.month': month, f'users.{ctx.author.id}.day': day, f'users.{ctx.author.id}.is_birthday': False, f'users.{ctx.author.id}.year': year}})
         else:
             await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{ctx.author.id}': {
-                'month': month, 'day': day, 'is_birthday': False
-            }}})
+                'month': month, 'day': day, 'is_birthday': False, 'year': year}}})
 
         response = 'Birthday updated successfully.'
 
@@ -174,16 +228,17 @@ class Birthdays(commands.Cog):
         if not doc or not usr_doc:
             await reply(ctx, f'{user.nick if user.nick else user.name} has not set a birthday.')
         else:
-            ddmmyy = False
             tz_collection = self.MONGO_DB['Timezones']
             tzdoc = await tz_collection.find_one({'user_id': ctx.author.id})
-            if tzdoc and tzdoc['ddmmyy']:
-                ddmmyy = True
+            ddmmyy = tzdoc and tzdoc['ddmmyy']
+            has_year = bool(usr_doc.get('year'))
             
             if ddmmyy:
-                await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is on {usr_doc["day"]:02d}/{usr_doc["month"]:02d}.')
+                await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is on {usr_doc["day"]:02d}/{usr_doc["month"]:02d}' +
+                    (f'/{usr_doc["year"]:04d}' if has_year else '') + '.')
             else:
-                await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is on {usr_doc["month"]:02d}/{usr_doc["day"]:02d}.')
+                await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is on {usr_doc["month"]:02d}/{usr_doc["day"]:02d}' +
+                    (f'/{usr_doc["year"]:04d}' if has_year else '') + '.')
 
     @commands.command(name='nextbirthday', aliases=['upcomingbirthday'])
     async def next_birthday(self, ctx):
@@ -191,7 +246,7 @@ class Birthdays(commands.Cog):
         Find the user whose birthday is up next.
         +nextbirthday
         """
-        birthdays = await self.get_birthdays(ctx)
+        birthdays = await self.get_birthdays_with_year(ctx)
 
         if birthdays == []:
             await reply(ctx, 'Looks like there are no birthdays in this server.')
@@ -205,7 +260,7 @@ class Birthdays(commands.Cog):
         if tz_doc and tz_doc['ddmmyy']:
             ddmmyy = True
 
-        for month, day, user_id in birthdays:
+        for month, day, year, user_id in birthdays:
             
             tz_doc = await tz_collection.find_one({'user_id': user_id})
             if tz_doc and tz_doc['is_set']:
@@ -221,17 +276,29 @@ class Birthdays(commands.Cog):
             if timezones.unix_at_time(timezone, month, day_to_check, timezones.current_year_in_tz(timezone), 0, 0, 0) > cur_time:
                 user = discord.utils.get(ctx.guild.members, id=user_id)
                 if not ddmmyy:
-                    await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is next on {month:02d}/{day:02d}.')
+                    msg = f'{user.nick if user.nick else user.name}\'s birthday is next on {month:02d}/{day:02d}.'
                 else:
-                    await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is next on {day:02d}/{month:02d}.')
+                    msg = f'{user.nick if user.nick else user.name}\'s birthday is next on {day:02d}/{month:02d}.'
+                
+                if year:
+                    current_year = datetime.now().year
+                    msg += f' They will turn {get_age(day, month, year, day, month, current_year)}.'
+
+                await reply(ctx, msg)
                 return
         
-        month, day, user_id = birthdays[0]
+        month, day, year, user_id = birthdays[0]
         user = discord.utils.get(ctx.guild.members, id=user_id)
         if not ddmmyy:
-            await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is next on {month:02d}/{day:02d}.')
+            msg = f'{user.nick if user.nick else user.name}\'s birthday is next on {month:02d}/{day:02d}.'
         else:
-            await reply(ctx, f'{user.nick if user.nick else user.name}\'s birthday is next on {day:02d}/{month:02d}.')
+            msg = f'{user.nick if user.nick else user.name}\'s birthday is next on {day:02d}/{month:02d}.'
+
+        if year:
+            next_year = datetime.now().year + 1
+            msg += f' They will turn {get_age(day, month, year, day, month, next_year)}.'
+
+        await reply(ctx, msg)
 
     @commands.command(name='birthdays')
     async def birthdays_cmd(self, ctx):
@@ -305,9 +372,20 @@ class Birthdays(commands.Cog):
                 ddmmyy = False
 
             mo = re.match(self.DATE_RE, date)
+
             if not mo:
-                await reply(ctx, f'The date should be in {"MM/DD" if not ddmmyy else "DD/MM"} format, but was *{date}*.')
+                await reply(ctx, f'The date should be in {"MM/DD[/YYYY]" if not ddmmyy else "DD/MM[/YYYY]"} format, but was *{date}*.')
                 return
+            
+            has_year = bool(mo.group(3))
+            year = None
+        
+            if has_year and len(mo.group(3)) != 4:
+                await reply(ctx, 'If you specify a year, it must be 4 digits.')
+                return
+        
+            if has_year:
+                year = int(mo.group(3))
             
             if not ddmmyy:
                 month = int(mo.group(1))
@@ -317,20 +395,30 @@ class Birthdays(commands.Cog):
                 day = int(mo.group(1))
 
             if not valid_date(month, day):
-                await reply(ctx, f'This date is invalid ({date}). Remember: your date format is set to {"MM/DD" if not ddmmyy else "DD/MM"}.')
+                await reply(ctx, f'This date is invalid ({date}). Remember: your date format is set to {"MM/DD[/YYYY]" if not ddmmyy else "DD/MM[/YYYY]"}.')
                 return
+            
+            if has_year:
+                now = datetime.now()
+                age = get_age(day, month, year, day, month, now.year)
+
+                if age > 120 or age < 5:
+                    await reply(ctx, 'uh are you sure about that one')
+                    return
 
             if not doc:
                 await collection.insert_one({'server': ctx.guild.id, 'role': 0, 'channel': 0, 'message': '', 'users': {}})
 
             if usr_doc:
-                await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}.day': day, f'users.{user.id}.month': month, f'users.{user.id}.is_birthday': False}})
+                await collection.update_one({'server': ctx.guild.id}, {'$set': 
+                    {f'users.{user.id}.day': day, f'users.{user.id}.month': month, f'users.{user.id}.is_birthday': False, f'users.{user.id}.year': year}})
             else:
                 await collection.update_one({'server': ctx.guild.id}, {'$set': {f'users.{user.id}': {
-                    'day': day, 'month': month, 'is_birthday': False
-                }}})
+                    'day': day, 'month': month, 'is_birthday': False, 'year': year}}})
 
             new_date = f'{day:02d}/{month:02d}' if ddmmyy else f'{month:02d}/{day:02d}'
+            if has_year:
+                new_date += f'/{year:04d}'
             date_format = 'DD/MM' if ddmmyy else 'MM/DD'
             await reply(ctx, f'Updated *{name}*\'s birthday to {new_date} (in {date_format} format).')
 
@@ -366,6 +454,26 @@ class Birthdays(commands.Cog):
         birthdays.sort(key=lambda x: x[0] * 1000 + x[1])
         
         return birthdays
+    
+    async def get_birthdays_with_year(self, ctx):
+        collection = self.MONGO_DB['Birthdays']
+        birthdays = []
+
+        doc = await collection.find_one({'server': ctx.guild.id})
+
+        if not doc:
+            return []
+
+        for usr_id, usr_doc in doc['users'].items():
+            member = discord.utils.get(ctx.guild.members, id=int(usr_id))
+            if not member:
+                continue
+            has_year = bool(usr_doc.get('year'))
+            birthdays.append((int(usr_doc['month']), int(usr_doc['day']), int(usr_doc['year']) if has_year else None, int(usr_id)))
+
+        birthdays.sort(key=lambda x: x[0] * 1000 + x[1])
+        
+        return birthdays
 
     async def birthday_start(self, user_id, server_id):
         user = self.bot.get_user(int(user_id))
@@ -386,13 +494,16 @@ class Birthdays(commands.Cog):
         if doc['role']:
             role = discord.utils.get(server.roles, id=doc['role'])
             await member.add_roles(role)
-        if int(doc['channel']) != 0 and doc['message'] != '':
+        if int(doc['channel']) != 0 and (doc.get('message') or doc.get('message_with_age')):
             channel = server.get_channel(int(doc['channel']))
 
             if member.id == self.bot.user.id:
                 await channel.send('It\'s my birthday!')
             else:
-                await channel.send(str(doc['message']).replace('%USER%', f'{member.mention}'))
+                if should_use_message_with_age(doc, user_id):
+                    await channel.send(str(doc['message_with_age']).replace('%USER%', f'{member.mention}').replace('%AGE%', str(get_age_for_user(doc, user_id))))
+                else:
+                    await channel.send(str(doc['message']).replace('%USER%', f'{member.mention}'))
                     
     async def birthday_end(self, user_id, server_id):
         user = self.bot.get_user(int(user_id))
@@ -456,4 +567,27 @@ def valid_date(month, day):
     else:
         return False
     
+
+def get_age(birth_day: int, birth_month: int, birth_year: int, target_day: int, target_month: int, target_year: int, add_1_day=True) -> int:
+    STRPTIME_FORMAT = '%d/%m/%Y'
+    birth_dt = datetime.strptime(f'{birth_day:02d}/{birth_month:02d}/{birth_year}', STRPTIME_FORMAT)
+    target_dt = datetime.strptime(f'{target_day:02d}/{target_month:02d}/{target_year}', STRPTIME_FORMAT)
+
+    if add_1_day:
+        target_dt += timedelta(days=1)
     
+    return relativedelta(target_dt, birth_dt).years
+
+
+def get_age_for_user(birthday_doc, user_id) -> int:
+    now = datetime.now()
+    month = int(birthday_doc['users'][str(user_id)]['month'])
+    day = int(birthday_doc['users'][str(user_id)]['day'])
+    year = int(birthday_doc['users'][str(user_id)]['year'])
+
+    return get_age(day, month, year, day, month, now.year)
+
+
+def should_use_message_with_age(birthday_doc, user_id) -> bool:
+    user_has_age_set = birthday_doc['users'].get(str(user_id)) and birthday_doc['users'][str(user_id)].get('year')
+    return user_has_age_set and birthday_doc.get('message_with_age')
