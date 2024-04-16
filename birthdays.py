@@ -95,7 +95,7 @@ class Birthdays(commands.Cog):
     async def birthday_message_with_age(self, ctx, *, message=None):
         """Birthdays
         Set the message that is sent when a user's birthday comes. %USER% will be replaced with the user's @ and %AGE% will be replaced with the user's age.
-        +birthdaymessage <Message>
+        +birthdaymessageage <Message>
         """
         usage = '+birthdaymessage <message> (use %USER% to mention the user in the message and %AGE% to display their age)'
 
