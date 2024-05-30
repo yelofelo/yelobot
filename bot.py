@@ -75,6 +75,7 @@ _STEAM_BASE_URL = 'https://api.steampowered.com/'
 LWOLF_SERVER_ID = 230963738574848000
 BOT_TESTING_SERVER_ID = 764984305696636939
 YELOFELO_USER_ID = 181276019301416960
+OOB_USER_ID = 323565167218655233
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 WEATHER_KEY = os.getenv('WEATHER_KEY')
@@ -2705,7 +2706,10 @@ async def third_funny(ctx):
         # james
         191428415755255809: 'https://cdn.discordapp.com/attachments/235949492992475137/929495840928694372/erb_walter.mp4',
         # high
-        171105319018037249: 'https://cdn.discordapp.com/attachments/230969392710549504/1158180282575356035/image.png'
+        171105319018037249: 'https://cdn.discordapp.com/attachments/230969392710549504/1158180282575356035/image.png',
+        # ooba
+        323565167218655233: 'https://cdn.discordapp.com/attachments/1202110999323496450/1245512972562862110/0d95d5ed385184739c1bd4e506545b35.png?ex=665905d9&is=6657b459&hm=aba65ebd972ad0a35f2626e39e0319da9d44e1a04e51004833f24757116afbc8&'
+
     }
 
     if ctx.author.id in funny3_users.keys():
@@ -2816,6 +2820,75 @@ async def roll(ctx, die='d6'):
     await ctx.send(f'Rolled a D{str(max_roll)} {str(rolls_to_make)} time(s). You rolled **{str(roll_sum)}** in total!')
 
 
+# TODO: works correctly, but the "keeptrack" variable doesn't output anything yet
+#       (it stores every stage of the sorting as a BIG string with line breaks)
+#       so make it output a text file as an attachment or something idk man
+#       also uncomment the 4 lines in the sort func before you do
+#       also should implement negative numbers
+@bot.command(name='sort', aliases=['moomoosort','oobsort'], hidden=True)
+async def oobsort(ctx, *, arg):
+    """Utility
+    Sort all numbers given after the command (other symbols will be discarded).
+    +sort [numbers]
+    """
+    usage = '+sort [numbers]'
+
+    def bettershuffle(array, start):
+        temparray = []
+        array.reverse()
+        for n in range(0, start):
+            temparray.append(array.pop())
+        random.shuffle(array)
+        array = temparray + array
+        return array
+
+    async def sort(array, keeptrack, unsorted, keptsame, firstUnsorted):
+        while unsorted:
+
+            #if(not keptsame):
+            #    keeptrack += str(array) + '\n'
+            #keptsame = False
+            breakout = False
+
+            for n in range(firstUnsorted, len(array)):
+                if array[firstUnsorted] > array[n]:
+                    breakout = True
+                    break
+            else:
+                #keptsame = True
+                firstUnsorted += 1
+
+    
+            if(breakout):
+                array = bettershuffle(array, firstUnsorted)
+    
+            if(firstUnsorted == len(array)):
+                unsorted = False
+
+
+        await reply(ctx, f"Sorted: {array}")
+                            
+    try:
+        async with asyncio.timeout(10):
+            array = [int(num) for num in re.findall(r'\d+', arg)]
+
+            if(len(array) == 0):
+                await reply(ctx, f"Invalid input: ({usage})")
+                return
+            
+            if(len(str(array)) > 1984):
+                await reply(ctx, "Output too large to fit in message, sort less numbers pls")
+                return
+
+            keeptrack = ""
+            unsorted = True
+            keptsame = False
+            firstUnsorted = 0
+            await sort(array, keeptrack, unsorted, keptsame, firstUnsorted)
+    except TimeoutError:
+        await reply(ctx, "Command took too long to execute")
+
+
 TONY_USER_ID = 155454518551642113
 
 
@@ -2911,6 +2984,18 @@ async def remove_wordcoin(ctx, *, user=None):
         await collection.update_one({'user': user_found.id}, {'$set': {'balance': new_balance}})
     
     await reply(ctx, f'{user_found.nick if user_found.nick else user_found.name} has redeemed 5 wordcoin. Their wordcoin balance is now {new_balance}.')
+
+
+@bot.command(name='amitheoob')
+async def am_i_theoob(ctx):
+    """Misc
+    Are you the oob?
+    +amitheoob
+    """
+    if ctx.author.id == OOB_USER_ID:
+        await reply(ctx, 'yeah')
+    else:
+        await reply(ctx, 'no')
 
 
 @bot.command(name='amiyelofelo')
