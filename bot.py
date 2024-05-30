@@ -2825,7 +2825,7 @@ async def roll(ctx, die='d6'):
 #       so make it output a text file as an attachment or something idk man
 #       also uncomment the 4 lines in the sort func before you do
 #       also should implement negative numbers
-@bot.command(name='sort', aliases=['moomoosort','oobsort'])
+@bot.command(name='sort', aliases=['moomoosort','oobsort'], hidden=True)
 async def oobsort(ctx, *, arg):
     """Utility
     Sort all numbers given after the command (other symbols will be discarded).
@@ -2835,8 +2835,9 @@ async def oobsort(ctx, *, arg):
 
     def bettershuffle(array, start):
         temparray = []
+        array.reverse()
         for n in range(0, start):
-            temparray.append(array.pop(0))
+            temparray.append(array.pop())
         random.shuffle(array)
         array = temparray + array
         return array
@@ -2850,7 +2851,7 @@ async def oobsort(ctx, *, arg):
             breakout = False
 
             for n in range(firstUnsorted, len(array)):
-                if array[firstUnsorted]>array[n]:
+                if array[firstUnsorted] > array[n]:
                     breakout = True
                     break
             else:
@@ -2876,7 +2877,7 @@ async def oobsort(ctx, *, arg):
                 return
             
             if(len(str(array)) > 1984):
-                await ctx.reply("Output too large to fit in message, sort less numbers pls")
+                await reply(ctx, "Output too large to fit in message, sort less numbers pls")
                 return
 
             keeptrack = ""
@@ -2885,7 +2886,7 @@ async def oobsort(ctx, *, arg):
             firstUnsorted = 0
             await sort(array, keeptrack, unsorted, keptsame, firstUnsorted)
     except TimeoutError:
-        await ctx.reply("Command took too long to execute")
+        await reply(ctx, "Command took too long to execute")
 
 
 TONY_USER_ID = 155454518551642113
