@@ -2812,6 +2812,10 @@ async def roll(ctx, die='d6'):
     if max_roll > 1_000_000_000_000_000_000:
         await ctx.send('im not gonna roll a die that has more than one quintillion sides')
         return
+    
+    if max_roll < 1:
+        await ctx.send('Woah there buddy... Positive integers only.')
+        return
 
     roll_sum = 0
     for i in range(rolls_to_make):
