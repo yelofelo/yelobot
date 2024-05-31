@@ -2812,6 +2812,10 @@ async def roll(ctx, die='d6'):
     if max_roll > 1_000_000_000_000_000_000:
         await ctx.send('im not gonna roll a die that has more than one quintillion sides')
         return
+    
+    if max_roll < 1:
+        await ctx.send('Woah there buddy... Positive integers only.')
+        return
 
     roll_sum = 0
     for i in range(rolls_to_make):
@@ -2824,7 +2828,6 @@ async def roll(ctx, die='d6'):
 #       (it stores every stage of the sorting as a BIG string with line breaks)
 #       so make it output a text file as an attachment or something idk man
 #       also uncomment the 4 lines in the sort func before you do
-#       also should implement negative numbers
 @bot.command(name='sort', aliases=['moomoosort','oobsort'], hidden=True)
 async def oobsort(ctx, *, arg):
     """Utility
@@ -2870,7 +2873,7 @@ async def oobsort(ctx, *, arg):
                             
     try:
         async with asyncio.timeout(10):
-            array = [int(num) for num in re.findall(r'\d+', arg)]
+            array = [int(num) for num in re.findall(r'-?\d+', arg)]
 
             if(len(array) == 0):
                 await reply(ctx, f"Invalid input: ({usage})")
