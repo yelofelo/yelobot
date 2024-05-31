@@ -2828,7 +2828,6 @@ async def roll(ctx, die='d6'):
 #       (it stores every stage of the sorting as a BIG string with line breaks)
 #       so make it output a text file as an attachment or something idk man
 #       also uncomment the 4 lines in the sort func before you do
-#       also should implement negative numbers
 @bot.command(name='sort', aliases=['moomoosort','oobsort'], hidden=True)
 async def oobsort(ctx, *, arg):
     """Utility
@@ -2874,7 +2873,7 @@ async def oobsort(ctx, *, arg):
                             
     try:
         async with asyncio.timeout(10):
-            array = [int(num) for num in re.findall(r'\d+', arg)]
+            array = [int(num) for num in re.findall(r'-?\d+', arg)]
 
             if(len(array) == 0):
                 await reply(ctx, f"Invalid input: ({usage})")
