@@ -2417,7 +2417,7 @@ async def kelp(ctx):
         await ctx.send('**CLICK**\nYou got lucky this time...') # dont change this to reply
     elif num <= 0.5:
         await reply(ctx,
-            'https://lh3.googleusercontent.com/qwGxJIKS7PyQzPmdGXltS9kkOd-7SsW0tjSCbbv_WyjFuhDPkhTCSN0_qACRXlt_WAwCJOFFl5W_ZgFv4XQr6Q=s400')
+            'https://static.wikia.nocookie.net/minecraft/images/1/12/Kelp.png/revision/latest?cb=20190930232427')
         await ctx.send('**KELP\'D!!!**') # dont change to reply
         kelpd = True
     else:
