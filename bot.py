@@ -61,6 +61,7 @@ import checks
 from help_command import HelpCommand
 import help_command
 from currency_conversion import CurrencyConversion
+import steam
 #from timestamps import Timestamps
 
 import yelobot_utils
@@ -1912,14 +1913,10 @@ async def steam_price(ctx, *, game):
         if doc:
             currency = doc['country']
 
-        details_params = {'appids': app_id, 'l': 'en_us', 'cc': currency}
-        url = 'https://store.steampowered.com/api/appdetails?'
-        response = requests.get(url, params=details_params)
+        status_code, details_data_json = await steam.get_price_info(bot.aiohttp_sess, app_id, currency)
 
-        if response.status_code != 200:
-            return f'{response.status_code} error; could not retrieve this result right now.'
-
-        details_data_json = response.json()
+        if status_code != 200:
+            return f'{status_code} error; could not retrieve this result right now.'
 
         app_name = details_data_json[app_id]['data']['name']
 

@@ -73,7 +73,7 @@ async def generate_gpt_3(bot, messages, openai_interface: OpenAIInterface) -> st
 
     # print(prefix)
 
-    output = openai_interface.generate(prefix, SYSTEM_MESSAGE)
+    output = await openai_interface.generate(prefix, SYSTEM_MESSAGE)
 
     return emoji.demojize(replace_with_emote(bot, output))
 

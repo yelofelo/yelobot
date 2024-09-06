@@ -11,7 +11,7 @@ pytz
 timezonefinder
 tweepy
 google-api-python-client
-openai==0.27.*
+openai==1.43.1
 setuptools>=65.5
 motor==3.1.*
 fuzzywuzzy==0.18.*
