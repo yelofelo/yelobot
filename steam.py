@@ -12,4 +12,4 @@ async def get_price_info(aiohttp_sess: aiohttp.ClientSession, app_id: str | int,
     async with aiohttp_sess.get(STEAM_APPDETAILS_URL, params=details_params) as response:
         if response.status != 200:
             return response.status, None
-        return response.status, response.json()
+        return response.status, await response.json()
