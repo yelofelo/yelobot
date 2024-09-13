@@ -32,7 +32,6 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-import requests
 import json
 
 from discord.ext import commands
@@ -89,12 +88,12 @@ MINECRAFT_HOST = os.getenv('MINECRAFT_HOST')
 BIBLE_API_KEY = os.getenv('BIBLE_API_KEY')
 EXCHANGE_RATE_KEY = os.getenv('EXCHANGE_RATE_KEY')
 
-MC_PORT = 25600
-RCON_PORT = 8183
+MC_PORT = 25569
+RCON_PORT = 8008
 MC_PLAYERS_SET = set()
 CHANNEL_FOR_MC_PLAYERS = None
 CHANNEL_FOR_MC_PLAYERS_ID = 1003172707183099977
-ANNOUNCE_MINECRAFT_EVENTS = False
+ANNOUNCE_MINECRAFT_EVENTS = True
 
 OPENAI_INTERFACE = OpenAIInterface(os.getenv('OPENAI_API_KEY'))
 
