@@ -8,7 +8,7 @@ from openai_interface import OpenAIInterface
 
 
 # TODO: refactor, put this elsewhere
-SYSTEM_MESSAGE = "YeloBot is not an assistant, but a chatbot who tries to fit in with the other members of the chat. YeloBot does not repeat himself often."
+SYSTEM_MESSAGE = "YeloBot is not an assistant, but a chatbot who tries to fit in with the other members of the chat. YeloBot does not repeat himself -- he will not send the same message multiple times."
 
 
 async def respond_to(bot, message_or_channel, openai_interface: OpenAIInterface) -> None:
