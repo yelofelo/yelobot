@@ -2662,6 +2662,9 @@ async def banner(ctx, *, person=None):
             # The banner field is only populated if called with Client.fetch_user
             user = await bot.fetch_user(member.id)
             banner_asset = user.banner
+            if banner_asset is None:
+                await reply(ctx, f'{member.nick if member.nick else member.name} does not have a banner.')
+                return
 
         url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(banner_asset.url)).path)
         filename = url_path_match.group(1)
@@ -2688,6 +2691,9 @@ async def global_banner(ctx, *, person=None):
     if member:
         # The banner field is only populated if called with Client.fetch_user
         user = await bot.fetch_user(member.id)
+        if not user.banner:
+            await reply(ctx, f'{member.nick if member.nick else member.name} does not have a global banner.')
+            return
         url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(user.banner.url)).path)
         filename = url_path_match.group(1)
 
