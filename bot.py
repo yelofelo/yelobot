@@ -2658,9 +2658,10 @@ async def banner(ctx, *, person=None):
 
     if member:
         banner_asset = member.guild_banner
-
         if banner_asset is None:
-            banner_asset = member.banner
+            # The banner field is only populated if called with Client.fetch_user
+            user = await bot.fetch_user(member.id)
+            banner_asset = user.banner
 
         url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(banner_asset.url)).path)
         filename = url_path_match.group(1)
@@ -2685,10 +2686,12 @@ async def global_banner(ctx, *, person=None):
         member = search_for_user(ctx, person)
 
     if member:
-        url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(member.banner.url)).path)
+        # The banner field is only populated if called with Client.fetch_user
+        user = await bot.fetch_user(member.id)
+        url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(user.banner.url)).path)
         filename = url_path_match.group(1)
 
-        async with bot.aiohttp_sess.get(str(member.avatar.url)) as resp:
+        async with bot.aiohttp_sess.get(str(user.banner.url)) as resp:
             await yelobot_utils.send_image(ctx, '', await resp.content.read(), filename)
     else:
         await reply(ctx, "i have no idea who you're talking about")
