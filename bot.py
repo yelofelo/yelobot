@@ -2605,7 +2605,7 @@ async def avatar(ctx, *, person=None):
         member = search_for_user(ctx, person)
 
     if member:
-        avatar_asset = member.guild_avatar
+        avatar_asset = member
 
         if avatar_asset is None:
             avatar_asset = member.avatar
@@ -2634,6 +2634,58 @@ async def global_avatar(ctx, *, person=None):
 
     if member:
         url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(member.avatar.url)).path)
+        filename = url_path_match.group(1)
+
+        async with bot.aiohttp_sess.get(str(member.avatar.url)) as resp:
+            await yelobot_utils.send_image(ctx, '', await resp.content.read(), filename)
+    else:
+        await reply(ctx, "i have no idea who you're talking about")
+
+
+@bot.command(name='banner')
+async def banner(ctx, *, person=None):
+    """Utility
+    Get a user's current banner. This will default to the user's server banner. Use +globalbanner if that's
+    not what you want.
+    +banner <User>
+    """
+    if len(ctx.message.mentions) > 0:
+        member = ctx.message.mentions[0]
+    elif person is None:
+        member = ctx.author
+    else:
+        member = search_for_user(ctx, person)
+
+    if member:
+        banner_asset = member.guild_banner
+
+        if banner_asset is None:
+            banner_asset = member.banner
+
+        url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(banner_asset.url)).path)
+        filename = url_path_match.group(1)
+
+        async with bot.aiohttp_sess.get(str(banner_asset.url)) as resp:
+            await yelobot_utils.send_image(ctx, '', await resp.content.read(), filename)
+    else:
+        await reply(ctx, "i have no idea who you're talking about")
+
+
+@bot.command(name='globalbanner', aliases=['gbanner'])
+async def global_banner(ctx, *, person=None):
+    """Utility
+    Get a user's global banner. If this user has a server banner set, this command will ignore it.
+    +globalbanner <User>
+    """
+    if len(ctx.message.mentions) > 0:
+        member = ctx.message.mentions[0]
+    elif person is None:
+        member = ctx.author
+    else:
+        member = search_for_user(ctx, person)
+
+    if member:
+        url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(member.banner.url)).path)
         filename = url_path_match.group(1)
 
         async with bot.aiohttp_sess.get(str(member.avatar.url)) as resp:

@@ -1,4 +1,4 @@
-discord.py==2.3.*
+git+https://github.com/Rapptz/discord.py.git@b3141db6e9e95280f35c1376ae74313c767a9f71
 requests
 wikipedia
 python-dotenv
