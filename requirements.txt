@@ -13,7 +13,7 @@ tweepy
 google-api-python-client
 openai==1.43.1
 setuptools>=65.5
-motor==3.1.*
+motor==3.6.*
 fuzzywuzzy==0.18.*
 python-Levenshtein==0.25.*
 python-dateutil==2.9.0.*
