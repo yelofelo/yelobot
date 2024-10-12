@@ -2605,10 +2605,11 @@ async def avatar(ctx, *, person=None):
         member = search_for_user(ctx, person)
 
     if member:
-        avatar_asset = member
+        avatar_asset = member.guild_avatar
 
         if avatar_asset is None:
-            avatar_asset = member.avatar
+            await reply(ctx, f'{member.nick if member.nick else member.name} has no avatar.')
+            return
 
         url_path_match = re.match(r'^.*/(.+)$', urllib.parse.urlparse(str(avatar_asset.url)).path)
         filename = url_path_match.group(1)
