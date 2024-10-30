@@ -3222,14 +3222,22 @@ async def eight_ball(ctx):
     A magic 8-ball.
     +8ball
     """
-    l = [
-        'Yeah!', 'No...', 'Nah.', 'Of course!', 'Perhaps.', 'Bro...', 'Probably.', 'Nooooo!',
-        'Yes.', 'No.', 'Not possible.', 'I have no idea.', 'Maybe?', 'For sure.', 'No way.',
-        "That's just not right.", 'YEA!', 'YES', 'NO YOU FUCKING IDIOT', "i honestly don't care",
-        'Are you serious bro?', 'LMAOOOOOOOO',
-        'youre retarded', 'sure whatever'
-        ]
-    await reply(ctx, random.choice(l))
+    positive_responses = ['Yeah!', 'Of course!', 'Perhaps.', 'Probably.', 'Yes.', 'YEAH!', 'YES', 'sure whatever', '✅ Confirmed', '✅ Bunked', 'true', 'real', 'ok']
+    negative_responses = ['No...', 'Nah.', 'Nooooo!', 'No.', 'Not possible.', 'No way.', 'That\'s just not right.', 'NO YOU FUCKING IDIOT', 'are you fr', '❌ Debunked', 'false', 'idit']
+    neutral_responses = ['I have no idea', 'maybe', 'idc', 'chat is this real', 'trolled face', 'can we get a fact check on this', 'The present moment is both eternal and painful. In Hell, there is relief in utter helplessness. Here, our actions have consequences for both ourselves and others.']
+    
+    roll = random.random()
+
+    chosen_responses = None
+
+    if roll < .45:
+        chosen_responses = positive_responses
+    elif roll < .9:
+        chosen_responses = negative_responses
+    else:
+        chosen_responses = neutral_responses
+
+    await reply(ctx, random.choice(chosen_responses))
 
 
 @bot.command(name='say')
