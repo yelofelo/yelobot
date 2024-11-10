@@ -3,3 +3,4 @@ model-preparation/
 venv/
 .env
 edit_db.py
+secrets.txt
