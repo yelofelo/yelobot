@@ -2377,7 +2377,7 @@ async def kelp_role(ctx: commands.Context, role=None):
     await reply(ctx, f'The Kelp role has been set to **{role.name}**.')
 
 
-@bot.command(name='kelproulette', aliases=['kelp', 'kelpcheck'])
+@bot.command(name='kelproulette', aliases=['kelp', 'kelpcheck', 'coal'])
 @commands.check(checks.invoked_in_club_cheadle)
 async def kelp(ctx):
     """Fun
@@ -2412,9 +2412,13 @@ async def kelp(ctx):
         await reply(ctx, 'https://p1.hiclipart.com/preview/636/174/332/gimp-handguns-silver-revolver-png-clipart.jpg')
         await ctx.send('**CLICK**\nYou got lucky this time...') # dont change this to reply
     elif num <= 0.5:
-        await reply(ctx,
-            'https://static.wikia.nocookie.net/minecraft/images/1/12/Kelp.png/revision/latest?cb=20190930232427')
-        await ctx.send('**KELP\'D!!!**') # dont change to reply
+        if yelobot_utils.is_christmas_season():
+            await reply(ctx, 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/5/58/Coal_JE4_BE3.png/revision/latest?cb=20230625214010')
+            await ctx.send('**COAL\'D!!!**')
+        else:
+            await reply(ctx,
+                'https://static.wikia.nocookie.net/minecraft/images/1/12/Kelp.png/revision/latest?cb=20190930232427')
+            await ctx.send('**KELP\'D!!!**') # dont change to reply
         kelpd = True
     else:
         choice = random.choice(kelp_list)

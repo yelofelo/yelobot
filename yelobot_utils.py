@@ -6,6 +6,7 @@ from functools import partial
 import io
 import aiohttp
 import re
+from datetime import datetime
 
 URL_RE = re.compile(r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
 MIME_MEDIA_RE = re.compile(r'^((image)|(video)|(audio))/.+$')
@@ -103,6 +104,14 @@ def time_remaining(unix_time):
             break
     
     return out_str.strip()
+
+def is_christmas_season():
+    now = datetime.now()
+    if now.month == 11:
+        return now.day >= 15
+    elif now.month == 12:
+        return now.day <= 26
+    return False
 
 async def send_image(messagable, content, img_data, filename, send_as_reply=True):
     with io.BytesIO(img_data) as img_data_bytes:
