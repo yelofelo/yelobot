@@ -69,6 +69,9 @@ from yelobot_utils import search_for_user, reply, Pagination, formatted_exceptio
 load_dotenv()
 os.environ['TZ'] = 'Europe/London'  # Set the timezone to UTC
 
+MAX_RUNTIME = int(23.5 * 60 * 60)
+MAIN_TASK_CHECK_INTERVAL = 10
+
 _STEAM_API_KEY = os.getenv('STEAM_KEY')
 _STEAM_BASE_URL = 'https://api.steampowered.com/'
 
@@ -3424,8 +3427,7 @@ async def main():
 
     await bot.start(BOT_TOKEN)
 
-
-async def run():
+async def run_bot():
     global MONGO_DB
 
     async with bot:
@@ -3437,7 +3439,19 @@ async def run():
             )[MONGO_DATABASE_NAME]
             bot.set_aiohttp_sess(sess)
             bot.set_mongo_db(MONGO_DB)
+
             await main()
+
+async def run():
+    bot_task = asyncio.create_task(run_bot())
+    time_elapsed = 0
+    while time_elapsed < MAX_RUNTIME:
+        await asyncio.sleep(MAIN_TASK_CHECK_INTERVAL)
+        time_elapsed += MAIN_TASK_CHECK_INTERVAL
+        if bot_task.done():
+            bot_task.result()
+    print('Time elapsed is greater than max runtime, cancelling the bot task.')
+    bot_task.cancel()
 
 if __name__ == '__main__':
     kelp_cooldown = Cooldown(43200)

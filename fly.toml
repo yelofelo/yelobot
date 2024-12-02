@@ -24,3 +24,8 @@ primary_region = 'sea'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
+[[restart]]
+  policy = "always"
+  retries = 50
+
