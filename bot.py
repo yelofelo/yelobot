@@ -120,7 +120,7 @@ StartupTask.set_bot(bot)
 
 lastmessages = LastMessages()
 
-PLAYING_STATUS = 'Mario Remastered'
+PLAYING_STATUS = 'Dark Souls 3'
 USER_AGENT = 'YeloBot/1.0'
 
 
