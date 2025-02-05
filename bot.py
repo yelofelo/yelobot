@@ -19,10 +19,9 @@ from dotenv import load_dotenv
 from mcstatus import JavaServer
 from mcrcon import MCRcon
 import socket
-from bs4 import BeautifulSoup, element
+from bs4 import BeautifulSoup
 from motor.motor_asyncio import AsyncIOMotorClient
 import emoji
-import io
 import certifi
 import aiohttp
 from fuzzywuzzy import fuzz
@@ -61,6 +60,7 @@ from help_command import HelpCommand
 import help_command
 from currency_conversion import CurrencyConversion
 import steam
+from bluesky import Bluesky
 #from timestamps import Timestamps
 
 import yelobot_utils
@@ -3398,6 +3398,10 @@ async def main():
     remind_cog = Reminders(bot, MONGO_DB)
     await bot.add_cog(remind_cog)
     StartupTask(remind_cog.init_reminders)
+
+    bluesky_cog = Bluesky(bot, MONGO_DB)
+    await bot.add_cog(bluesky_cog)
+    StartupTask(bluesky_cog.sub_to_posts_startup)
 
     # twitter_cog = Twitter(bot, MONGO_DB, os.getenv('TWITTER_BEARER'))
     # await bot.add_cog(twitter_cog)
