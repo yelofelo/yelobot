@@ -42,7 +42,42 @@ class Bluesky(commands.Cog):
             return
 
         await self.collection.insert_one({
-            'server': ctx.guild.id, 'channel': ctx.channel.id, 'bsky_handle': handle, 'last_searched_time': timestamp})
+            'server': ctx.guild.id, 'channel': ctx.channel.id, 'bsky_handle': handle, 'last_searched_time': timestamp, 'replies': False})
+        
+        await reply(ctx, f'Successfully subscribed to {handle}.')
+
+
+    # TODO refactor this so that we're not just coping code 
+    @commands.has_permissions(manage_messages=True)
+    @commands.command('subscribeblueskywithreplies', aliases=['subblueskywithreplies', 'blueskysubwithreplies', 'subbskywithreplies', 'bskysubwithreplies', 'blueskysubscribewithreplies'])
+    async def bluesky_sub_with_replies(self, ctx: commands.Context, handle=None):
+        """Bluesky
+        Subscribe to a Bluesky user in this channel; include their replies.
+        +subscribeblueskywithreplies <Handle>
+        """
+        usage = '+subscribeblueskywithreplies <Handle>'
+
+        if handle is None:
+            await reply(ctx, usage)
+            return
+        
+        handle = handle.lstrip('@')
+
+        try:
+            await bluesky_interface.get_user_feed(self.bot.aiohttp_sess, handle)
+        except bluesky_interface.Bluesky400Error:
+            await reply(ctx, 'This is not a valid Bluesky handle.\n' + usage)
+            return
+        
+        timestamp = float(time.time())
+
+        existing_doc = await self.collection.find_one({'server': ctx.guild.id, 'channel': ctx.channel.id, 'bsky_handle': handle})
+        if existing_doc:
+            await reply(ctx, 'A subscription for this Bluesky account already exists in this channel.')
+            return
+
+        await self.collection.insert_one({
+            'server': ctx.guild.id, 'channel': ctx.channel.id, 'bsky_handle': handle, 'last_searched_time': timestamp, 'replies': True})
         
         await reply(ctx, f'Successfully subscribed to {handle}.')
 
@@ -84,7 +119,7 @@ class Bluesky(commands.Cog):
                 dt = datetime.fromtimestamp(float(doc['last_searched_time']), timezone.utc)
 
                 try:
-                    posts = await bluesky_interface.get_posts_after_time(self.bot.aiohttp_sess, doc['bsky_handle'], doc['last_searched_time'])
+                    posts = await bluesky_interface.get_posts_after_time(self.bot.aiohttp_sess, doc['bsky_handle'], doc['last_searched_time'], 'replies' in doc and doc['replies'])
                 except bluesky_interface.Bluesky400Error:
                     await channel.send(f'{doc["bsky_handle"]}\'s Bluesky account does not seem to exist. Deleted subscription.')
                     continue

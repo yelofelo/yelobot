@@ -11,10 +11,10 @@ def iso_to_unix(iso: str) -> float:
     return datetime.fromisoformat(iso.replace('Z', '+00:00')).timestamp()
 
 
-async def get_posts_after_time(aiohttp_sess: aiohttp.ClientSession, handle: str, timestamp: int | float) -> list:
+async def get_posts_after_time(aiohttp_sess: aiohttp.ClientSession, handle: str, timestamp: int | float, include_replies: bool=False) -> list:
     posts_after_time = []
 
-    feed_data = await get_user_feed(aiohttp_sess, handle)
+    feed_data = await get_user_feed(aiohttp_sess, handle, include_replies)
 
     for post_wrapper in feed_data['feed']:
         post = post_wrapper['post']
@@ -32,8 +32,9 @@ async def get_posts_after_time(aiohttp_sess: aiohttp.ClientSession, handle: str,
     return list(reversed(posts_after_time))
 
 
-async def get_user_feed(aiohttp_sess: aiohttp.ClientSession, handle: str) -> dict:
-    response = await aiohttp_sess.get(BASE_URL + GET_AUTHOR_FEED_PATH, params={'actor': handle, 'filter': 'posts_no_replies', 'includePins': 'false'})
+async def get_user_feed(aiohttp_sess: aiohttp.ClientSession, handle: str, include_replies: bool=False) -> dict:
+    filter = 'posts_with_replies' if include_replies else 'posts_no_replies'
+    response = await aiohttp_sess.get(BASE_URL + GET_AUTHOR_FEED_PATH, params={'actor': handle, 'filter': filter, 'includePins': 'false'})
 
     if response.status == 400:
         raise Bluesky400Error('Bluesky returned 400')
