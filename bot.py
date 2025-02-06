@@ -747,7 +747,7 @@ async def punish_counting(message):
 
     member = yelobot_utils.get(message.guild.members, id=message.author.id)
     await member.add_roles(punish_role)
-    await message.channel.send(f'{message.author.mention} will be punished for {COUNTING_PUNISHMENT_STRINGS.setdefault(punish_level, COUNTING_PUNISHMENT_TIMES[5])}.')
+    await message.channel.send(f'{message.author.mention} will be punished for {COUNTING_PUNISHMENT_STRINGS.setdefault(punish_level, COUNTING_PUNISHMENT_STRINGS[5])}.')
     if time_to_remove - time.time() < 86400:
         bot.loop.create_task(counting_punishment_thread(time_to_remove, message.guild.id, message.author.id, punish_role.id))
     
