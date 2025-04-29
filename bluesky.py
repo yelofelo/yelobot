@@ -5,6 +5,7 @@ import bluesky_interface
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import time
+import traceback
 
 
 class Bluesky(commands.Cog):
@@ -116,12 +117,11 @@ class Bluesky(commands.Cog):
                     await self.collection.delete_one(doc)
                     continue
 
-                dt = datetime.fromtimestamp(float(doc['last_searched_time']), timezone.utc)
-
                 try:
                     posts = await bluesky_interface.get_posts_after_time(self.bot.aiohttp_sess, doc['bsky_handle'], doc['last_searched_time'], 'replies' in doc and doc['replies'])
                 except bluesky_interface.Bluesky400Error:
-                    await channel.send(f'{doc["bsky_handle"]}\'s Bluesky account does not seem to exist. Deleted subscription.')
+                    traceback.print_exc()
+                    await asyncio.sleep(self.subscription_cooldown * 5)
                     continue
 
                 if len(posts) != 0:
