@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py.git@b3141db6e9e95280f35c1376ae74313c767a9f71
+discord.py==2.5.*
 requests
 wikipedia
 python-dotenv
@@ -17,3 +17,4 @@ motor==3.6.*
 fuzzywuzzy==0.18.*
 python-Levenshtein==0.25.*
 python-dateutil==2.9.0.*
+nba_api==1.9.*

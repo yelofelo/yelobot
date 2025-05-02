@@ -64,10 +64,11 @@ from bluesky import Bluesky
 #from timestamps import Timestamps
 
 import yelobot_utils
+import dynamic_status
 from yelobot_utils import search_for_user, reply, Pagination, formatted_exception, YeloBot
 
 load_dotenv()
-os.environ['TZ'] = 'Europe/London'  # Set the timezone to UTC
+os.environ['TZ'] = 'Etc/UTC'  # Set the timezone to UTC
 
 MAX_RUNTIME = int(23.5 * 60 * 60)
 MAIN_TASK_CHECK_INTERVAL = 10
@@ -3386,6 +3387,13 @@ async def set_pagination_emojis():
 async def assign_roles_on_startup():
     await asyncio.sleep(5)
     await save_roles.assign_roles_on_startup_impl(bot, MONGO_DB)
+
+@StartupTask
+async def init_dynamic_status():
+    await asyncio.sleep(5)
+    if dynamic_status.deltarune_status_end_condition():
+        return
+    await dynamic_status.update_status(bot, dynamic_status.generate_deltarune_status_message, 59, base_game_status=PLAYING_STATUS, end_condition=dynamic_status.deltarune_status_end_condition)
 
 async def main():
     global RESPONSE_LOCK
