@@ -3393,7 +3393,10 @@ async def init_dynamic_status():
     await asyncio.sleep(5)
     if dynamic_status.deltarune_status_end_condition():
         return
-    await dynamic_status.update_status(bot, dynamic_status.generate_deltarune_status_message, 59, base_game_status=PLAYING_STATUS, end_condition=dynamic_status.deltarune_status_end_condition)
+    await dynamic_status.update_status(bot, dynamic_status.generate_deltarune_status_message,
+                                       calculate_refresh_time=lambda: 60 - (time.time() % 60),
+                                       base_game_status=PLAYING_STATUS,
+                                       end_condition=dynamic_status.deltarune_status_end_condition)
 
 async def main():
     global RESPONSE_LOCK

@@ -9,14 +9,14 @@ DELTARUNE_RELEASE = datetime(year=2025, month=6, day=5, hour=4, minute=0, second
 DELTARUNE_RELEASE_SUFFIX = 'until DELTARUNE releases!'
 
 
-async def update_status(bot: YeloBot, get_status_message: Callable, refresh_interval: int | float, base_game_status: str, end_condition: Callable):
+async def update_status(bot: YeloBot, get_status_message: Callable, calculate_refresh_time: Callable, base_game_status: str, end_condition: Callable):
     while True:
         if end_condition():
             await bot.change_presence(activity=discord.Game(name=base_game_status))
             return
         message = get_status_message()
         await bot.change_presence(activity=discord.CustomActivity(name=message))
-        await asyncio.sleep(refresh_interval)
+        await asyncio.sleep(calculate_refresh_time())
 
 
 def get_remaining_time_until_deltarune(td: timedelta) -> str:
