@@ -20,11 +20,17 @@ async def update_status(bot: YeloBot, get_status_message: Callable, calculate_re
 
 
 def get_remaining_time_until_deltarune(td: timedelta) -> str:
-    if td.days:
+    if td.days == 1:
+        return f'1 day {DELTARUNE_RELEASE_SUFFIX}'
+    elif td.days:
         return f'{td.days} days {DELTARUNE_RELEASE_SUFFIX}'
+    elif (td.seconds > 60 * 60) and (td.seconds // (60 * 60)) == 1:
+        return f'1 hour {DELTARUNE_RELEASE_SUFFIX}'
     elif td.seconds > 60 * 60:
         hours_remaining = td.seconds // (60 * 60)
         return f'{hours_remaining} hours {DELTARUNE_RELEASE_SUFFIX}'
+    elif td.seconds // 60 == 1:
+        return f'1 minute {DELTARUNE_RELEASE_SUFFIX}'
     else:
         minutes_remaining = td.seconds // 60
         return f'{minutes_remaining} minutes {DELTARUNE_RELEASE_SUFFIX}'
