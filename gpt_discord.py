@@ -8,7 +8,10 @@ from openai_interface import OpenAIInterface
 
 
 # TODO: refactor, put this elsewhere
-SYSTEM_MESSAGE = "YeloBot is not an assistant, but a chatbot who tries to fit in with the other members of the chat. YeloBot does not repeat himself -- he will not send the same message multiple times."
+SYSTEM_MESSAGE = "YeloBot is not an assistant, but a chatbot who tries to fit in with the other members of the chat. YeloBot does not repeat himself -- he will not send the same text on multiple lines."
+
+
+GMCC_RE = re.compile(r'^<:g[mn]cc:\d{19}>$')
 
 
 async def respond_to(bot, message_or_channel, openai_interface: OpenAIInterface) -> None:
@@ -17,28 +20,20 @@ async def respond_to(bot, message_or_channel, openai_interface: OpenAIInterface)
     else:
         channel = message_or_channel.channel
 
-    history = list(reversed([msg async for msg in channel.history(limit=9)]))
+    history = list(filter(lambda msg: msg.author.id == bot.user.id and not re.match(GMCC_RE, msg.content), reversed([msg async for msg in channel.history(limit=9)])))
 
     response = await generate_gpt_3(bot, history, openai_interface)
-
-    # first_line = True
 
     for i, line in enumerate(response.splitlines()):
         if i == 5:
             await channel.send('[I was going to keep talking, but YeloFelo is trying to be responsible so he limited me :/]')
             return
-        # if first_line: # and not isinstance(message_or_channel, discord.TextChannel):
-        #     await channel.send(line)
-        # else:
         async with channel.typing():
             await asyncio.sleep(len(line) / 20)
         await channel.send(line)
-        # first_line = False
 
 
 async def generate_gpt_3(bot, messages, openai_interface: OpenAIInterface) -> str:
-    global GPT_SESS
-
     prefix = ''
 
     last_author = None
@@ -70,8 +65,6 @@ async def generate_gpt_3(bot, messages, openai_interface: OpenAIInterface) -> st
         user = await bot.fetch_user(uid)
         prefix = prefix.replace(to_rep, user.name)
         mo = re.search(compiled, prefix)
-
-    # print(prefix)
 
     output = await openai_interface.generate(prefix, SYSTEM_MESSAGE)
 
