@@ -5,7 +5,7 @@ import asyncio
 import discord
 
 
-DELTARUNE_RELEASE = datetime(year=2025, month=6, day=5, hour=4, minute=0, second=0)
+DELTARUNE_RELEASE = datetime(year=2025, month=6, day=4, hour=15, minute=0, second=0)
 DELTARUNE_RELEASE_SUFFIX = 'until DELTARUNE releases!'
 
 
