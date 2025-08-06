@@ -96,7 +96,7 @@ MC_PORT = 25579
 RCON_PORT = 8077
 MC_PLAYERS_SET = set()
 CHANNEL_FOR_MC_PLAYERS = None
-CHANNEL_FOR_MC_PLAYERS_ID = 1003172707183099977 #testbot: 1118286812998291670
+CHANNEL_FOR_MC_PLAYERS_ID = 1003172707183099977
 ANNOUNCE_MINECRAFT_EVENTS = True
 
 OPENAI_INTERFACE = OpenAIInterface(os.getenv('OPENAI_API_KEY'))
@@ -1628,13 +1628,9 @@ async def minecraft_players(ctx):
 @tasks.loop(seconds=15.0)
 async def check_minecraft_events():
     global MC_PLAYERS_SET
-    print('in check_minecraft_events')
     try:
-        print('creating server')
         server = JavaServer(MINECRAFT_IP, MC_PORT)
-        print('created server')
         status = server.status()
-        print('retrieved status')
     except Exception as e:
         etype = str(type(e)).lstrip('<class \'').rstrip('\'>')
         print(f'check_minecraft_events: {etype}: {e}')
@@ -3438,7 +3434,7 @@ async def main():
     #await bot.add_cog(Timestamps(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
-        print('announcing MC events')
+        print('Announcing MC events')
         check_minecraft_events.start()
 
     for task in StartupTask.tasks:
