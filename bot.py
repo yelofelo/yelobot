@@ -182,11 +182,6 @@ async def get_invocation_data(ctx: commands.Context):
 
     await reply(ctx, f'```\n{output}```')
 
-@bot.command(name='test')
-async def test(ctx: commands.Context):
-    print(f'TEST invoked, ctx:\n{ctx},\nmessage:{ctx.message}')
-    await reply(ctx, f'{ctx}')
-
 @bot.event
 async def on_message(message: discord.Message):
     # This NEEDS to be refactored into other functions. This event is an absolute mess.
@@ -200,8 +195,6 @@ async def on_message(message: discord.Message):
 
     if message.author == bot.user or message.channel.id == 247568720682024961:
         return
-    
-    print(f'MESSAGE RECEIVED:\n{message}')
     
     if message.type == discord.MessageType.pins_add:
         archive_cog: ArchivePins = bot.get_cog('ArchivePins')

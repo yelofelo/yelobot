@@ -3,10 +3,11 @@ from discord.ext.commands import has_guild_permissions
 import re
 from yelobot_utils import reply, get_channel_from_input
 import discord
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 class MessageFilter(commands.Cog):
     word_re = re.compile(r'^([a-z]| )+$')
-    def __init__(self, bot, mongodb):
+    def __init__(self, bot, mongodb: AsyncIOMotorDatabase):
         self.bot = bot
         self.collection = mongodb['MessageFilter']
         self.regex_dict = dict()
