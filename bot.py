@@ -135,6 +135,9 @@ IS_TALKING = None
 RESPOND_TO_MENTIONS = True
 
 
+BOT_STATUS = discord.CustomActivity(name='5 years of YeloBot!')
+
+
 @bot.event
 async def on_ready():
     # bot.tree.copy_global_to(guild=discord.Object(BOT_TESTING_SERVER_ID))
@@ -145,7 +148,7 @@ async def on_ready():
         print(
             f'{guild.name}(id: {guild.id})'
         )
-    await bot.change_presence(activity=discord.Game(name=PLAYING_STATUS))
+    await bot.change_presence(activity=BOT_STATUS)
 
 
 @bot.command(name='syncglobal', hidden=True)
@@ -3395,7 +3398,7 @@ async def init_dynamic_status():
         return
     await dynamic_status.update_status(bot, dynamic_status.generate_deltarune_status_message,
                                        calculate_refresh_time=lambda: 60 - (time.time() % 60),
-                                       base_game_status=PLAYING_STATUS,
+                                       base_status=BOT_STATUS,
                                        end_condition=dynamic_status.deltarune_status_end_condition)
 
 async def main():
