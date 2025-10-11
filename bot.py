@@ -132,7 +132,7 @@ RESPONSE_MESSAGE_GOAL = random.randint(50, 200)
 RESPONSE_LOCK = None
 
 IS_TALKING = None
-RESPOND_TO_MENTIONS = True
+RESPOND_TO_MENTIONS = False
 
 
 BOT_STATUS = discord.CustomActivity(name='5 years of YeloBot!')
