@@ -121,7 +121,6 @@ StartupTask.set_bot(bot)
 
 lastmessages = LastMessages()
 
-PLAYING_STATUS = 'Dark Souls 3'
 USER_AGENT = 'YeloBot/1.0'
 
 
@@ -135,7 +134,7 @@ IS_TALKING = None
 RESPOND_TO_MENTIONS = False
 
 
-BOT_STATUS = discord.CustomActivity(name='5 years of YeloBot!')
+BOT_STATUS = discord.Game('Bird Game 3')
 
 
 @bot.event
