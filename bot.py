@@ -101,6 +101,8 @@ ANNOUNCE_MINECRAFT_EVENTS = False
 
 OPENAI_INTERFACE = OpenAIInterface(os.getenv('OPENAI_API_KEY'))
 
+CLUB_CHEADLE_GENERAL_ID = 230963738574848000
+
 intents = discord.Intents.default()
 intents.members = True
 intents.reactions = True
@@ -2067,6 +2069,7 @@ async def steam_achieve(ctx, user=None, game=None, show=None):
 
 
 @bot.command(name='inspire', aliases=['inspirobot', 'inspiro', 'motivate'])
+@commands.check(checks.invoked_not_in_channel(CLUB_CHEADLE_GENERAL_ID))
 async def inspirobot(ctx):
     """Fun
     Generate an image using InspiroBot.
