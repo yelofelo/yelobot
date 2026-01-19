@@ -16,3 +16,12 @@ def invoked_by_user(*args) -> 'function':
         return ctx.author.id in users
 
     return check
+
+
+def invoked_not_in_channel(*args) -> 'function':
+    channels = set(args)
+    
+    def check(ctx: commands.Context):
+        return ctx.channel.id not in channels
+    
+    return check
