@@ -4,7 +4,7 @@ This is the source code of YeloBot. Check out bot.py for the entry point of the 
 
 ## Contributing
 
-If you would like to contribute and need to run the bot locally for development purposes, you will need to create a Discord bot and a free MongoDB database. Both of these are pretty easy! See how to create a Discord bot [here](https://discord.com/developers/docs/getting-started) (the only step you need to worry about is Step 1: Creating an app). For the MongoDB database, go to the [MongoDB website](https://www.mongodb.com/) and create a free cluster through their UI and a database inside of that cluster.
+If you would like to contribute and need to run the bot locally for development purposes, you will need to create a Discord bot and a free MongoDB database. Both of these are pretty easy! See how to create a Discord bot [here](https://docs.discord.com/developers/quick-start/getting-started) (the only step you need to worry about is Step 1: Creating an app). For the MongoDB database, go to the [MongoDB website](https://www.mongodb.com/) and create a free cluster through their UI and a database inside of that cluster.
 
 To get the bot running, you will need to set a few environment variables. Instead of actually setting these variables on your system, you can use a .env file. Simply create a file called ".env" **(no file name, just this extension)** in the root directory of this project. Here is a template for what this file should look like. If you don't need a variable for your purposes, simply leave it blank.
 
