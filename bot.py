@@ -126,10 +126,10 @@ lastmessages = LastMessages()
 USER_AGENT = 'YeloBot/1.0'
 
 
-RESPONSE_TIME_TO_WAIT = random.randrange(20 * 60, int(1.5 * 60 * 60))
+RESPONSE_TIME_TO_WAIT = random.randrange(45 * 60, 3 * 60 * 60)
 RESPONSE_IDLE_STATUSES = []
 RESPONSE_MESSAGE_COUNTER = 0
-RESPONSE_MESSAGE_GOAL = random.randint(50, 200)
+RESPONSE_MESSAGE_GOAL = random.randint(75, 300)
 RESPONSE_LOCK = None
 
 IS_TALKING = None
