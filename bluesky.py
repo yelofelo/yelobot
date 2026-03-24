@@ -1,5 +1,4 @@
 from discord.ext import commands
-from datetime import datetime, timezone
 from yelobot_utils import reply, YeloBot
 import bluesky_interface
 import asyncio
@@ -9,7 +8,7 @@ import traceback
 
 
 class Bluesky(commands.Cog):
-    subscription_cooldown = 30
+    subscription_cooldown = 45
     def __init__(self, bot: YeloBot, mongo: AsyncIOMotorDatabase):
         self.bot = bot
         self.collection = mongo['BlueskySubs']
@@ -119,6 +118,10 @@ class Bluesky(commands.Cog):
 
                 try:
                     posts = await bluesky_interface.get_posts_after_time(self.bot.aiohttp_sess, doc['bsky_handle'], doc['last_searched_time'], 'replies' in doc and doc['replies'])
+                except bluesky_interface.BlueskyTooManyRequestsError:
+                    traceback.print_exc()
+                    await asyncio.sleep(self.subscription_cooldown * 5)
+                    continue
                 except bluesky_interface.Bluesky400Error:
                     traceback.print_exc()
                     await asyncio.sleep(self.subscription_cooldown * 5)

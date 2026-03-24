@@ -38,6 +38,8 @@ async def get_user_feed(aiohttp_sess: aiohttp.ClientSession, handle: str, includ
 
     if response.status == 400:
         raise Bluesky400Error('Bluesky returned 400')
+    elif response.status == 429:
+        raise BlueskyTooManyRequestsError('Bluesky returned 429')
     elif response.status != 200:
         raise BlueskyNon200StatusError(f'Bluesky returned {response.status}')
     
@@ -49,6 +51,10 @@ class BlueskyNon200StatusError(Exception):
 
 
 class Bluesky400Error(BlueskyNon200StatusError):
+    pass
+
+
+class BlueskyTooManyRequestsError(BlueskyNon200StatusError):
     pass
 
 
