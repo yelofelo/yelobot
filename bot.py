@@ -630,6 +630,9 @@ RECORD_COUNTING_REACTION = '☑️'
 GRACE_PERIOD_END_REACTION = '⚠️'
 COUNTING_FAIL_REACTION = '❌'
 
+def is_valid_count(last_num: int, next_num: int) -> bool:
+    return next_num == last_num + 1 or (yelobot_utils.is_april_fools() and next_num == last_num - 1)
+
 async def process_counting(message, number):
     if message.author.bot:
         return
@@ -640,7 +643,7 @@ async def process_counting(message, number):
     if doc is None:
         return
 
-    if message.author.id == doc['last_user'] or number != doc['count'] + 1:
+    if message.author.id == doc['last_user'] or not is_valid_count(int(doc['count']), number):
         if message.author.id == doc['last_user']:
             reason_message = f'{message.author.mention} counted twice in a row! The next number is 1.'
         else:
@@ -661,9 +664,9 @@ async def process_counting(message, number):
     old_user_num = users.setdefault(str(message.author.id), 0)
     users[str(message.author.id)] = old_user_num + 1
     if record:
-        await collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'record': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
+        await collection.update_one({'server': message.guild.id}, {'$set': {'count': number, 'record': number, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
     else:
-        await collection.update_one({'server': message.guild.id}, {'$set': {'count': doc['count'] + 1, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
+        await collection.update_one({'server': message.guild.id}, {'$set': {'count': number, 'users': users, 'last_user': message.author.id, 'last_message': message.id}})
 
     if doc['grace_period'] != 1 and doc['grace_period'] == number:
         reaction = GRACE_PERIOD_END_REACTION
@@ -2717,11 +2720,6 @@ async def global_banner(ctx, *, person=None):
             await yelobot_utils.send_image(ctx, '', await resp.content.read(), filename)
     else:
         await reply(ctx, "i have no idea who you're talking about")
-
-
-@bot.command(name='sex', hidden=True)
-async def sex(ctx):
-    await ctx.send('https://cdn.discordapp.com/attachments/231248040688746496/770132377845628958/sins.mp4')
 
 
 # The funny commands are like the first things I ever implemented.

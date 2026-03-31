@@ -7,6 +7,7 @@ import io
 import aiohttp
 import re
 from datetime import datetime
+import timezones
 
 URL_RE = re.compile(r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
 MIME_MEDIA_RE = re.compile(r'^((image)|(video)|(audio))/.+$')
@@ -129,9 +130,12 @@ def get_channel_from_input(bot, input_text):
     
     return channel
 
-
 def formatted_exception(exception):
     return str(type(exception)).lstrip('<class \'').rstrip('\'>') + f': {exception}'
+
+def is_april_fools(timezone: str='America/Chicago') -> bool:
+    dt = timezones.datetime_now_in_tz(timezone)
+    return dt.month == 4 and dt.day == 1
 
 class PaginationButton(discord.ui.Button):
     def __init__(self, **kargs):
