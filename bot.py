@@ -126,7 +126,7 @@ lastmessages = LastMessages()
 USER_AGENT = 'YeloBot/1.0'
 
 
-RESPONSE_TIME_TO_WAIT = random.randrange(45 * 60, 3 * 60 * 60)
+RESPONSE_TIME_TO_WAIT = random.randrange(60 * 60, 4 * 60 * 60)
 RESPONSE_IDLE_STATUSES = []
 RESPONSE_MESSAGE_COUNTER = 0
 RESPONSE_MESSAGE_GOAL = random.randint(75, 300)
@@ -1694,9 +1694,6 @@ async def tell_minecraft(ctx, *, message):
     Send a message to the players in the Minecraft server.
     +tellminecraft <Message>
     """
-    if ctx.message.guild.id != LWOLF_SERVER_ID and ctx.message.guild.id != 764984305696636939:
-        return
-
     if not message:
         await ctx.send('Usage: +tellminecraft [message]')
         return
@@ -1729,17 +1726,12 @@ async def server_icon(ctx):
 @bot.command(name='ranks', aliases=['levels'], hidden=True)
 @commands.check(checks.invoked_in_club_cheadle)
 async def ranks(ctx):
-    if ctx.message.guild.id != LWOLF_SERVER_ID:
-        return
     await reply(ctx, 'use +i ranks instead')
 
 
 @bot.command(name='rank', hidden=True)
 @commands.check(checks.invoked_in_club_cheadle)
 async def rank(ctx: commands.Context):
-    if ctx.guild.id != LWOLF_SERVER_ID:
-        return
-    
     await reply(ctx, 'it\'s /rank idiot')
 
 
@@ -2090,26 +2082,9 @@ async def inspirobot(ctx):
         await yelobot_utils.send_image(ctx, (ib_message if random.random() < 0.05 else ''), await response.content.read(), 'inspire.jpg')
 
 
-@bot.command(name='speak', hidden=True)
-async def speak(ctx):
-    # if speak_cooldown.not_on_cooldown(ctx.author):
-    #     speak_cooldown.add_user(ctx.author)
-    #     gen = await generate_gpt_2()
-    #     generated = gen.splitlines()
-    #     for line in generated:
-    #         async with ctx.typing():
-    #             await asyncio.sleep(len(line) / 12)
-    #         await ctx.send(line)
-    # else:
-    #     await ctx.send('you\'re on cooldown bitch')
-    await ctx.send('This isn\'t a thing anymore.')
-
-
 @bot.command(name='map', hidden=True)
 @commands.check(checks.invoked_in_club_cheadle)
 async def map_cmd(ctx):
-    if ctx.message.guild.id != LWOLF_SERVER_ID:
-        return
     await reply(ctx, 'use "+i map" instead')
 
 
