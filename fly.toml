@@ -6,9 +6,6 @@
 app = 'yelobot'
 primary_region = 'sea'
 
-[build]
-  builder = 'paketobuildpacks/builder-jammy-base'
-
 [env]
   PORT = '8080'
 
