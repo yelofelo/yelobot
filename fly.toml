@@ -24,5 +24,4 @@ primary_region = 'sea'
 
 [[restart]]
   policy = "always"
-  retries = 50
 
