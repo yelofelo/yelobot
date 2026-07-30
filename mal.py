@@ -184,7 +184,7 @@ class MyAnimeList(commands.Cog):
                 # I don't want to deal with that right now lol
                 return
             
-            last_time_sent = time_to_send - (72 * 60 * 60) # TODO: CHANGE BACK TO 24
+            last_time_sent = time_to_send - (24 * 60 * 60)
             
             anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc)
             manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc)
