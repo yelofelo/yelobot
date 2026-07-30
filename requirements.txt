@@ -18,3 +18,7 @@ fuzzywuzzy==0.18.*
 python-Levenshtein==0.25.*
 python-dateutil==2.9.0.*
 nba_api==1.9.*
+cachetools
+asyncache
+feedparser
+truststore

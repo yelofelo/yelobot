@@ -26,6 +26,9 @@ import certifi
 import aiohttp
 from fuzzywuzzy import fuzz
 from typing import Iterable
+import socket
+import truststore
+import ssl
 
 import urllib.request
 import urllib.parse
@@ -61,6 +64,7 @@ import help_command
 from currency_conversion import CurrencyConversion
 import steam
 from bluesky import Bluesky
+from mal import MyAnimeList
 #from timestamps import Timestamps
 
 import yelobot_utils
@@ -3405,6 +3409,10 @@ async def main():
     await bot.add_cog(convert_currency_cog)
     StartupTask(convert_currency_cog.update_currencies)
 
+    mal_cog = MyAnimeList(bot, MONGO_DB)
+    await bot.add_cog(mal_cog)
+    StartupTask(mal_cog.init_feeds)
+
     await bot.add_cog(MessageFilter(bot, MONGO_DB))
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
@@ -3425,7 +3433,11 @@ async def run_bot():
     global MONGO_DB
 
     async with bot:
-        async with aiohttp.ClientSession(loop=bot.loop) as sess:
+        # Crazy that we have to do this, but as of writing, certifi hasn't been updated to use new
+        # Let's Encyrypt root certs (ISRG Root YE and YR), so we have to use our OS' truststore (for now)...
+        # This is one of the worst things I've ever had to debug
+        connector = aiohttp.TCPConnector(family=socket.AF_INET, ssl=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT))
+        async with aiohttp.ClientSession(loop=bot.loop, connector=connector) as sess:
             MONGO_DB = AsyncIOMotorClient(
                 MONGO_CONNECTION_STRING,
                 tlsCAFile=certifi.where(),
