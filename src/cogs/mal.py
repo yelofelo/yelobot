@@ -216,10 +216,6 @@ class MyAnimeList(commands.Cog):
         if not updates:
             return None
         
-        embed = discord.Embed(
-            color=discord.Color.blue()
-        )
-        
         most_frequent_media = []
         most_frequent_media_count = 0
 
@@ -239,10 +235,7 @@ class MyAnimeList(commands.Cog):
         except tenrai.TenraiRequestException:
             traceback.print_exc()
 
-        if tenrai_data:
-            embed.set_thumbnail(url=tenrai_data['data']['images']['jpg']['image_url'])
-
-        field_value = ''
+        embed_description = ''
 
         for user_id, updates_list in updates.items():
             user = self.bot.get_user(user_id)
@@ -253,17 +246,20 @@ class MyAnimeList(commands.Cog):
                     print(f'MyAnimeList.get_embed: User {user_id} not found, just skipping for now...')
                     continue
 
-            if field_value != '':
-                field_value += '\n'
+            if embed_description != '':
+                embed_description += '\n'
 
-            field_value += f'\n**[{doc["users"][str(user_id)]}](https://myanimelist.net/profile/{doc["users"][str(user_id)]}) | {user.mention}**\n'
-            field_value += '\n'.join([f'• {title} | {description}' for _, title, description in updates_list])
+            embed_description += f'\n**[{doc["users"][str(user_id)]}](https://myanimelist.net/profile/{doc["users"][str(user_id)]}) | {user.mention}**\n'
+            embed_description += '\n'.join([f'• {title} | {description}' for _, title, description in updates_list])
 
-        embed.add_field(
-            name='Anime Updates' if mal_content_type == mal_rss.MALContentType.ANIME else 'Manga Updates',
-            value=field_value,
-            inline=False
+        embed = discord.Embed(
+            title='Anime Updates' if mal_content_type == mal_rss.MALContentType.ANIME else 'Manga Updates',
+            description=embed_description,
+            color=discord.Color.blue()
         )
+
+        if tenrai_data:
+            embed.set_thumbnail(url=tenrai_data['data']['images']['jpg']['image_url'])
 
         return embed
 
