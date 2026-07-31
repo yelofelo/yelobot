@@ -6,9 +6,9 @@ import time
 from datetime import datetime, timedelta
 import asyncio
 
-import yelobot_utils
-from yelobot_utils import Pagination, PaginationButton, reply, YeloBot
-import timezones
+import utils.yelobot_utils as yelobot_utils
+from utils.yelobot_utils import Pagination, PaginationButton, reply, YeloBot
+import utils.timezones as timezones
 
 months = dict([
     ('january', '1'),

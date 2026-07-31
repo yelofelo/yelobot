@@ -1,9 +1,9 @@
 from discord.ext import commands, tasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from yelobot_utils import reply, YeloBot
-import bible_api
+from utils.yelobot_utils import reply, YeloBot
+import clients.bible_api as bible_api
 import traceback
-import timezones
+import utils.timezones as timezones
 import time
 
 

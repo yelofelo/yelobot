@@ -1,5 +1,5 @@
 from discord.ext import commands
-from yelobot_utils import reply, YeloBot
+from utils.yelobot_utils import reply, YeloBot
 import time
 import asyncio
 import re

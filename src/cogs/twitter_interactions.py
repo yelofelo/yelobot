@@ -1,6 +1,6 @@
 import tweepy
 from discord.ext import commands
-from yelobot_utils import reply, get_channel_from_input, formatted_exception
+from utils.yelobot_utils import reply, get_channel_from_input, formatted_exception
 import time
 from datetime import datetime
 import asyncio

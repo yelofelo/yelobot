@@ -1,6 +1,6 @@
 # YeloBot
 
-This is the source code of YeloBot. Check out bot.py for the entry point of the bot.
+This is the source code of YeloBot. Check out src/bot.py for the entry point of the bot.
 
 ## Contributing
 
@@ -49,4 +49,4 @@ OPENAI_API_KEY=
 
 YeloBot currently runs on **Python 3.11**. There are a lot of dependencies, so I **strongly** recommend creating a virtual environment before running it. To do this, run `python -m venv [SOME_ENVIRONMENT_NAME]`. Then, activate it using `[SOME_ENVIRONMENT_NAME]\Scripts\activate` on Windows or `source [SOME_ENVIRONMENT_NAME]/bin/activate` on Mac/Linux. You will then be able to install all of the dependencies on this virtual environment with `python -m pip install -r requirements.txt`.
 
-After you've done all that, you're finally ready to run the bot with `python bot.py`. If you've read this whole section, thank you for at least considering making a contribution to YeloBot :)
+After you've done all that, you're finally ready to run the bot with `python src/bot.py`. If you've read this whole section, thank you for at least considering making a contribution to YeloBot :)

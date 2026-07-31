@@ -1,6 +1,6 @@
-import mal_rss
-import tenrai
-import timezones
+import clients.mal_rss as mal_rss
+import clients.tenrai as tenrai
+import utils.timezones as timezones
 import time
 import random
 import discord
@@ -13,7 +13,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from discord.ext import commands
 from discord.ext.commands import has_permissions
-from yelobot_utils import YeloBot, reply
+from utils.yelobot_utils import YeloBot, reply
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 class MyAnimeList(commands.Cog):
@@ -185,7 +185,7 @@ class MyAnimeList(commands.Cog):
                 return
             
             last_time_sent = time_to_send - (24 * 60 * 60)
-            
+
             anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc)
             manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc)
 
@@ -198,7 +198,7 @@ class MyAnimeList(commands.Cog):
             await collection.update_one({'_id': channel_id}, {"$set": {'time_to_send': time_to_send}})
 
     async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc) -> Optional[discord.Embed]:
-        updates = {}
+        updates = defaultdict(list)
 
         frequencies = defaultdict(int)
         for discord_user, mal_user in doc['users'].items():
@@ -207,7 +207,6 @@ class MyAnimeList(commands.Cog):
             except mal_rss.MALRSSRequestException:
                 traceback.print_exc()
           
-            updates[int(discord_user)] = []
             for media_id, pub_time, title, description in media_list:
                 if pub_time < last_time_sent:
                     break

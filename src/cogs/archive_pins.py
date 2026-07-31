@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from yelobot_utils import reply, get_channel_from_input, contains_url, discord_timestamp, YeloBot
+from utils.yelobot_utils import reply, get_channel_from_input, contains_url, discord_timestamp, YeloBot
 import io
 import time
 

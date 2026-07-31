@@ -7,7 +7,7 @@ import io
 import aiohttp
 import re
 from datetime import datetime
-import timezones
+import utils.timezones as timezones
 
 URL_RE = re.compile(r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
 MIME_MEDIA_RE = re.compile(r'^((image)|(video)|(audio))/.+$')

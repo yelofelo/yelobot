@@ -1,6 +1,6 @@
 __pycache__/
 model-preparation/
 venv/
-.env
+.env*
 edit_db.py
 secrets.txt

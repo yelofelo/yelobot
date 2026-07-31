@@ -43,33 +43,33 @@ from discord.ext.commands.errors import CommandError
 
 import discord
 
-from lastmessages import LastMessages
-import nominatim
-import timezonedb
-import timezones
-from tictactoe import TicTacToe, TicTacToeInvalidMoveError, TicTacToeWrongPlayerError
-from startup_tasks import StartupTask
-from birthdays import Birthdays
-import save_roles
-from reminders import Reminders
-import gpt_discord
-from openai_interface import OpenAIInterface
-from message_filter import MessageFilter
-from archive_pins import ArchivePins
-from bible_verse import BibleVerse
-from daily_messages import DailyMessages
-import checks
-from help_command import HelpCommand
-import help_command
-from currency_conversion import CurrencyConversion
-import steam
-from bluesky import Bluesky
-from mal import MyAnimeList
+from utils.lastmessages import LastMessages
+import clients.nominatim as nominatim
+import clients.timezonedb as timezonedb
+import utils.timezones as timezones
+from utils.tictactoe import TicTacToe, TicTacToeInvalidMoveError, TicTacToeWrongPlayerError
+from utils.startup_tasks import StartupTask
+from cogs.birthdays import Birthdays
+import utils.save_roles as save_roles
+from cogs.reminders import Reminders
+import utils.gpt_discord as gpt_discord
+from clients.openai_interface import OpenAIInterface
+from cogs.message_filter import MessageFilter
+from cogs.archive_pins import ArchivePins
+from cogs.bible_verse import BibleVerse
+from cogs.daily_messages import DailyMessages
+import utils.checks as checks
+from cogs.help_command import HelpCommand
+import cogs.help_command as help_command
+from cogs.currency_conversion import CurrencyConversion
+import clients.steam as steam
+from cogs.bluesky import Bluesky
+from cogs.mal import MyAnimeList
 #from timestamps import Timestamps
 
-import yelobot_utils
-import dynamic_status
-from yelobot_utils import search_for_user, reply, Pagination, formatted_exception, YeloBot
+import utils.yelobot_utils as yelobot_utils
+import utils.dynamic_status as dynamic_status
+from utils.yelobot_utils import search_for_user, reply, Pagination, formatted_exception, YeloBot
 
 load_dotenv()
 os.environ['TZ'] = 'Etc/UTC'  # Set the timezone to UTC
@@ -1841,7 +1841,7 @@ async def set_country(ctx, *, country=None):
         await reply(ctx, '+setcountry <country>')
         return
     
-    with open('country_codes.json', 'r') as f:
+    with open('data/country_codes.json', 'r') as f:
         data = json.load(f)
 
     lower_country = country.lower()

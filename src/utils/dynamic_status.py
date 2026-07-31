@@ -1,4 +1,4 @@
-from yelobot_utils import YeloBot
+from utils.yelobot_utils import YeloBot
 from typing import Callable
 from datetime import datetime, timedelta
 import asyncio

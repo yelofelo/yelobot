@@ -4,11 +4,11 @@ import discord
 from discord.ext.commands import has_permissions, has_guild_permissions
 import re
 import asyncio
-import timezones
+import utils.timezones as timezones
 import time
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from yelobot_utils import reply, search_for_user, Pagination, YeloBot
+from utils.yelobot_utils import reply, search_for_user, Pagination, YeloBot
 
 
 JOHN_USER_ID = 147908091768340480

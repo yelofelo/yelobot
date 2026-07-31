@@ -1,6 +1,6 @@
 from discord.ext import commands
-from yelobot_utils import reply, YeloBot
-import bluesky_interface
+from utils.yelobot_utils import reply, YeloBot
+import clients.bluesky_interface as bluesky_interface
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import time

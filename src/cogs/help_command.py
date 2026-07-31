@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import MissingPermissions
-from yelobot_utils import YeloBot, Pagination, reply
+from utils.yelobot_utils import YeloBot, Pagination, reply
 
 
 def get_category_from_command(command: commands.Command):

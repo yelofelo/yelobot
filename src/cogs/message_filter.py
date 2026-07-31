@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord.ext.commands import has_guild_permissions
 import re
-from yelobot_utils import reply, get_channel_from_input
+from utils.yelobot_utils import reply, get_channel_from_input
 import discord
 from motor.motor_asyncio import AsyncIOMotorDatabase
 

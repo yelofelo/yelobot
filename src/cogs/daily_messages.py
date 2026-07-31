@@ -1,9 +1,9 @@
 from discord.ext import commands
-from yelobot_utils import YeloBot, reply, Pagination, PaginationButton
+from utils.yelobot_utils import YeloBot, reply, Pagination, PaginationButton
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from datetime import timedelta, datetime
 
-import timezones
+import utils.timezones as timezones
 import re
 import asyncio
 import discord

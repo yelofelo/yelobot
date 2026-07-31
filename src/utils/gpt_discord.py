@@ -4,7 +4,7 @@ import asyncio
 import discord
 import time
 
-from openai_interface import OpenAIInterface
+from clients.openai_interface import OpenAIInterface
 
 
 # TODO: refactor, put this elsewhere
