@@ -186,8 +186,8 @@ class MyAnimeList(commands.Cog):
             
             last_time_sent = time_to_send - (24 * 60 * 60)
 
-            anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc)
-            manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc)
+            anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc, channel.guild)
+            manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc, channel.guild)
 
             if anime_embed:
                 await channel.send(embed=anime_embed)
@@ -197,7 +197,7 @@ class MyAnimeList(commands.Cog):
             time_to_send += 24 * 60 * 60
             await collection.update_one({'_id': channel_id}, {"$set": {'time_to_send': time_to_send}})
 
-    async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc) -> Optional[discord.Embed]:
+    async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc, guild: discord.Guild) -> Optional[discord.Embed]:
         updates = defaultdict(list)
 
         frequencies = defaultdict(int)
@@ -238,13 +238,10 @@ class MyAnimeList(commands.Cog):
         embed_description = ''
 
         for user_id, updates_list in updates.items():
-            user = self.bot.get_user(user_id)
+            user = discord.utils.get(guild.members, id=user_id)
             if user is None:
-                try:
-                    user = await self.bot.fetch_user(user_id)
-                except discord.NotFound:
-                    print(f'MyAnimeList.get_embed: User {user_id} not found, just skipping for now...')
-                    continue
+                print(f'MyAnimeList.get_embed: User {user_id} not found, just skipping for now...')
+                continue
 
             if embed_description != '':
                 embed_description += '\n'
