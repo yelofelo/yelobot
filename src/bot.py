@@ -131,7 +131,7 @@ USER_AGENT = 'YeloBot/1.0'
 
 
 RESPONSE_TIME_TO_WAIT = random.randrange(60 * 60, 4 * 60 * 60)
-RESPONSE_IDLE_STATUSES = []
+RESPONSE_IDLE_STATUS = {}
 RESPONSE_MESSAGE_COUNTER = 0
 RESPONSE_MESSAGE_GOAL = random.randint(75, 300)
 RESPONSE_LOCK = None
@@ -197,7 +197,7 @@ async def on_message(message: discord.Message):
     global lastmessages
     global RESPONSE_MESSAGE_COUNTER
     global RESPONSE_MESSAGE_GOAL
-    global RESPONSE_IDLE_STATUSES
+    global RESPONSE_IDLE_STATUS
     global RESPONSE_LOCK
     global RESPONSE_TIME_TO_WAIT
 
@@ -253,15 +253,14 @@ async def on_message(message: discord.Message):
                     await gpt_discord.respond_to(bot, message, OPENAI_INTERFACE)
                     RESPONSE_MESSAGE_COUNTER = 0
                     RESPONSE_MESSAGE_GOAL = random.randint(50, 200)
-                if RESPONSE_IDLE_STATUSES:
-                    status = RESPONSE_IDLE_STATUSES.pop()
-                    status['idle'] = False
-            
-            new_status = {'idle': True}
-            async with RESPONSE_LOCK:
-                RESPONSE_IDLE_STATUSES.append(new_status)
-            if await gpt_discord.send_if_idle(bot, RESPONSE_TIME_TO_WAIT, message.channel, new_status, OPENAI_INTERFACE, RESPONSE_LOCK):
-                RESPONSE_TIME_TO_WAIT = random.randrange(20 * 60, int(1.5 * 60 * 60))
+                    RESPONSE_TIME_TO_WAIT = random.randrange(60 * 60, 4 * 60 * 60)
+                if RESPONSE_IDLE_STATUS:
+                    RESPONSE_IDLE_STATUS['idle'] = False
+    
+                RESPONSE_IDLE_STATUS = {'idle': True}
+
+            if await gpt_discord.send_if_idle(bot, RESPONSE_TIME_TO_WAIT, message.channel, RESPONSE_IDLE_STATUS, OPENAI_INTERFACE, RESPONSE_LOCK):
+                RESPONSE_TIME_TO_WAIT = random.randrange(60 * 60, 4 * 60 * 60)
                 RESPONSE_MESSAGE_GOAL = random.randint(50, 200)
                 RESPONSE_MESSAGE_COUNTER = 0
 
