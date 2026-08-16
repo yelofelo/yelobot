@@ -199,9 +199,14 @@ class MyAnimeList(commands.Cog):
 
     async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc, guild: discord.Guild) -> Optional[discord.Embed]:
         updates = defaultdict(list)
-
         frequencies = defaultdict(int)
+        members = {member.id: member for member in guild.members}
+
         for discord_user, mal_user in doc['users'].items():
+            if int(discord_user) not in members:
+                print(f'MyAnimeList.get_embed: User {user_id} not found, just skipping for now...')
+                continue
+
             try:
                 media_list = await mal_rss.get_mal_rss(self.bot.aiohttp_sess, mal_content_type, mal_user)
             except mal_rss.MALRSSRequestException:
@@ -238,10 +243,7 @@ class MyAnimeList(commands.Cog):
         embed_description = ''
 
         for user_id, updates_list in updates.items():
-            user = discord.utils.get(guild.members, id=user_id)
-            if user is None:
-                print(f'MyAnimeList.get_embed: User {user_id} not found, just skipping for now...')
-                continue
+            user = members[user_id]
 
             if embed_description != '':
                 embed_description += '\n'
