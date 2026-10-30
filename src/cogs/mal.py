@@ -163,41 +163,44 @@ class MyAnimeList(commands.Cog):
 
         doc = await collection.find_one({'_id': channel_id})
         while True:
-            if not doc:
-                print(f'Channel {channel} has no MAL thread feed anymore! Stopping mal_thread for this channel.')
-                return
-            
-            if time_to_send is None:  # First iteration
-                time_to_send = float(doc['time_to_send'])
-            if time.time() < time_to_send:
-                await asyncio.sleep(time_to_send - time.time())
+            try:
+                if not doc:
+                    print(f'Channel {channel} has no MAL thread feed anymore! Stopping mal_thread for this channel.')
+                    return
+                
+                if time_to_send is None:  # First iteration
+                    time_to_send = float(doc['time_to_send'])
+                if time.time() < time_to_send:
+                    await asyncio.sleep(time_to_send - time.time())
 
-            doc = await collection.find_one({'_id': channel_id})
-            if not doc:
-                print(f'Channel {channel} has no MAL thread feed anymore! Stopping mal_thread for this channel.')
-                return
-            
-            if not math.isclose(time_to_send, float(doc['time_to_send'])):
-                print('Time to send is not close to whats in the doc!', time_to_send, float(doc['time_to_send']))
-                # A new thread was created during the wait, so abandon this one. I guess there is an edge case here if the new thread
-                # has the same time_to_send as the last one and we may get duplicate messages until the bot restarts... but oh well
-                # I don't want to deal with that right now lol
-                return
-            
-            last_time_sent = time_to_send - (24 * 60 * 60)
+                doc = await collection.find_one({'_id': channel_id})
+                if not doc:
+                    print(f'Channel {channel} has no MAL thread feed anymore! Stopping mal_thread for this channel.')
+                    return
+                
+                if not math.isclose(time_to_send, float(doc['time_to_send'])):
+                    print('Time to send is not close to whats in the doc!', time_to_send, float(doc['time_to_send']))
+                    # A new thread was created during the wait, so abandon this one. I guess there is an edge case here if the new thread
+                    # has the same time_to_send as the last one and we may get duplicate messages until the bot restarts... but oh well
+                    # I don't want to deal with that right now lol
+                    return
+                
+                last_time_sent = time_to_send - (24 * 60 * 60)
 
-            anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc, channel.guild)
-            manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc, channel.guild)
+                anime_embed = await self.get_embed(mal_rss.MALContentType.ANIME, last_time_sent, doc, channel.guild)
+                manga_embed = await self.get_embed(mal_rss.MALContentType.MANGA, last_time_sent, doc, channel.guild)
 
-            if anime_embed:
-                await channel.send(embed=anime_embed)
-            if manga_embed:
-                await channel.send(embed=manga_embed)
+                if anime_embed:
+                    await channel.send(embed=anime_embed)
+                if manga_embed:
+                    await channel.send(embed=manga_embed)
 
-            time_to_send += 24 * 60 * 60
-            await collection.update_one({'_id': channel_id}, {"$set": {'time_to_send': time_to_send}})
+                time_to_send += 24 * 60 * 60
+                await collection.update_one({'_id': channel_id}, {"$set": {'time_to_send': time_to_send}})
+            except Exception:
+                traceback.print_exc()
 
-    async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc, guild: discord.Guild) -> Optional[discord.Embed]:
+    async def get_embed(self, mal_content_type: mal_rss.MALContentType, last_time_sent: int, doc, guild: discord.Guild, cap_at_24_hr: bool=True) -> Optional[discord.Embed]:
         updates = defaultdict(list)
         frequencies = defaultdict(int)
         members = {member.id: member for member in guild.members}
@@ -213,6 +216,8 @@ class MyAnimeList(commands.Cog):
                 traceback.print_exc()
           
             for media_id, pub_time, title, description in media_list:
+                if cap_at_24_hr and (pub_time > last_time_sent + (24 * 60 * 60)):
+                    continue
                 if pub_time < last_time_sent:
                     break
                 updates[int(discord_user)].append((media_id, title, description))
