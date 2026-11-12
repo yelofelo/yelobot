@@ -32,6 +32,9 @@ TIMEZONE_KEY=
 BIBLE_API_KEY=
 # exchangeratesapi.io key (for +convertcurrency)
 EXCHANGE_RATE_KEY=
+# Twitter Auth
+TWITTER_AUTH_TOKEN=
+TWITTER_CT0=
 
 ######### Rarely Needed #########
 # These are used by YeloBot's live deployment, but for

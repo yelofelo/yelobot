@@ -4,3 +4,4 @@ venv/
 .env*
 edit_db.py
 secrets.txt
+*.db

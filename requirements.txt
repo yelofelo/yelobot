@@ -22,3 +22,4 @@ cachetools
 asyncache
 feedparser
 truststore
+twscrape

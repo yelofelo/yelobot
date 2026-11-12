@@ -64,6 +64,7 @@ import cogs.help_command as help_command
 from cogs.currency_conversion import CurrencyConversion
 import clients.steam as steam
 from cogs.bluesky import Bluesky
+from cogs.twitter import Twitter
 from cogs.mal import MyAnimeList
 #from timestamps import Timestamps
 
@@ -3395,10 +3396,10 @@ async def main():
     await bot.add_cog(bluesky_cog)
     StartupTask(bluesky_cog.sub_to_posts_startup)
 
-    # twitter_cog = Twitter(bot, MONGO_DB, os.getenv('TWITTER_BEARER'))
-    # await bot.add_cog(twitter_cog)
-    # StartupTask(twitter_cog.sub_to_tweets_startup)
-    # Twitter API is dead :(
+    twitter_cog = Twitter(bot, MONGO_DB)
+    await twitter_cog.init_twscrape(os.getenv('TWITTER_AUTH_TOKEN'), os.getenv('TWITTER_CT0'))
+    await bot.add_cog(twitter_cog)
+    StartupTask(twitter_cog.sub_to_tweets_startup)
 
     daily_message_cog = DailyMessages(bot, MONGO_DB)
     await bot.add_cog(daily_message_cog)
@@ -3416,7 +3417,6 @@ async def main():
     await bot.add_cog(ArchivePins(bot, MONGO_DB))
     await bot.add_cog(BibleVerse(bot, MONGO_DB, BIBLE_API_KEY))
     await bot.add_cog(HelpCommand(bot))
-    #await bot.add_cog(Timestamps(bot, MONGO_DB))
 
     if ANNOUNCE_MINECRAFT_EVENTS:
         print('Announcing MC events')
