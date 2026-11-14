@@ -163,7 +163,13 @@ class Twitter(commands.Cog):
 
     async def sub_to_tweets_startup(self):
         await asyncio.sleep(5)
-        await self.sub_loop()
+        while True:
+            try:
+                await self.sub_loop()
+            except Exception:
+                print('Execption in Twitter sub loop!')
+                traceback.print_exc()
+                await asyncio.sleep(self.subscription_cooldown * 3)
 
 
 def twitter_url_from_tweet(tweet: twscrape.Tweet) -> str:
