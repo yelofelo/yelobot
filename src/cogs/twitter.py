@@ -5,7 +5,6 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import time
 import traceback
-import os
 
 
 TWEET_LOOKBACK_COUNT = 20
@@ -126,9 +125,11 @@ class Twitter(commands.Cog):
         else:
             tweets = await twscrape.gather(self.api.user_tweets(twitter_user_id, limit=lookback_count))
 
+        tweets.sort(key=lambda tweet: tweet.date.timestamp(), reverse=True)
+
         for tweet in tweets:
-            if tweet.user.id != twitter_user_id:
-                continue # repost?
+            if tweet.retweetedTweetId:
+                continue
 
             created_unix = tweet.date.timestamp()
 
